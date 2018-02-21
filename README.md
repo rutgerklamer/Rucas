@@ -21,3 +21,9 @@ Usage is as follows:
 | PRNTA | / | PRINT ASCII value |
 | PRNTR | / | PRINT RAW value |
 | CINP |  / | Copy input to current cell we are on |
+
+### LOOP
+| Operation | Arguments | Explanation |
+| ----------- | ----------- | ----------- |
+| STLP | / | Start a loop if the current cells value isn't 0  |
+| NDLP | / | End a loop if the current cell value is 0 |
