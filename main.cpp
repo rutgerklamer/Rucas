@@ -6,12 +6,14 @@
 
 std::vector<int> m_cells;
 std::vector<int> m_current_loop;
+std::vector<int> m_current_if_statement;
 std::vector<std::string> m_ruc_code;
 std::vector<int> m_stack;
 int m_cell;
 int m_inp_pos;
 std::string m_inp;
 bool m_false_loop;
+bool m_false_if_statement;
 int m_found_brackets;
 
 void runCode();
@@ -29,6 +31,7 @@ int main(int argc, char const *argv[])
 	m_cell = 0;
 	m_inp_pos = 0;
 	m_false_loop = false;
+	m_false_if_statement = false;
 	std::string line;
 	while (std::getline(fin, line))
 	{
@@ -43,7 +46,7 @@ void runCode()
 {
 	int i = 0;
 	for (i = 0; i < m_ruc_code.size(); i++) {
-		if (!m_false_loop) {
+		if (!m_false_loop && !m_false_if_statement) {
 			if (m_ruc_code[i].find("JMP") != std::string::npos && m_ruc_code[i].find("JMPR") == std::string::npos && m_ruc_code[i].find("JMPL") == std::string::npos) {
 				if (getIntFromString(m_ruc_code[i]) >= 0 && getIntFromString(m_ruc_code[i]) < 30000) {
 					m_cell = getIntFromString(m_ruc_code[i]);
@@ -115,15 +118,33 @@ void runCode()
 				i = m_ruc_code.size();
 				std::cout << "\nTERMINATING PROGRAM" << std::endl;
 			}
-
+			else if (m_ruc_code[i].find("IF") != std::string::npos && m_ruc_code[i].find("ENDIF") == std::string::npos) {
+				if (m_cells[m_cell] == 0) {
+					m_false_if_statement = true;
+					m_found_brackets = 0;
+				}
+			}
+			else if (m_ruc_code[i].find("ENDIF") != std::string::npos) {
+					m_found_brackets = 0;
+			}
 		}
-		else if (m_ruc_code[i].find("STLP") != std::string::npos) {
+		else if (m_ruc_code[i].find("STLP") != std::string::npos && m_false_loop) {
 			m_found_brackets++;
 			if (m_found_brackets > 0)
 				m_false_loop = false;
 		}
-		else if (m_ruc_code[i].find("NDLP") != std::string::npos)
+		else if (m_ruc_code[i].find("NDLP") != std::string::npos && m_false_loop) {
 			m_found_brackets--;
+		}
+		else if (m_ruc_code[i].find("IF") != std::string::npos && m_false_if_statement && m_ruc_code[i].find("ENDIF") == std::string::npos) {
+			m_found_brackets++;
+			
+		}
+		else if (m_ruc_code[i].find("ENDIF") != std::string::npos && m_false_if_statement) {
+			m_found_brackets--;
+			if (m_found_brackets < 0)
+				m_false_if_statement = false;
+		}
 	}
 }
 
@@ -135,10 +156,10 @@ int getIntFromString(std::string s)
 		else if (i >= s.size() - 1) {
 			if (s.find("$CELL") != std::string::npos)
 				return m_cells[m_cell];
-			else if (s.find("$STACK") != std::string::npos)
+			else if (s.find("$STACK") != std::string::npos) {
 				if (m_stack.size() > 0)
 					return m_stack[m_stack.size() - 1];
-			else
+			} else
 				return 1;
 		}
 	}
