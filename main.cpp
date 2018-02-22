@@ -18,6 +18,7 @@ void runCode();
 int getIntFromString(std::string s);
 void wrapValue(int i);
 void wrapPosition(int i);
+void addSubStack(int x, int y);
 
 int main(int argc, char const *argv[])
 {
@@ -47,9 +48,9 @@ void runCode()
 				wrapPosition(getIntFromString(m_ruc_code[i]));
 			else if (m_ruc_code[i].find("JMPL") != std::string::npos)
 				wrapPosition(-getIntFromString(m_ruc_code[i]));
-			else if (m_ruc_code[i].find("ADD") != std::string::npos)
+			else if (m_ruc_code[i].find("ADD") != std::string::npos && m_ruc_code[i].find("ADDS") == std::string::npos)
 				wrapValue(getIntFromString(m_ruc_code[i]));
-			else if (m_ruc_code[i].find("SUB") != std::string::npos)
+			else if (m_ruc_code[i].find("SUB") != std::string::npos && m_ruc_code[i].find("SUBS") == std::string::npos)
 				wrapValue(-getIntFromString(m_ruc_code[i]));
 			else if (m_ruc_code[i].find("STLP") != std::string::npos)
 				(m_cells[m_cell] != 0 ? m_current_loop.push_back(i) : m_false_loop = true, m_found_brackets = 0);
@@ -65,9 +66,15 @@ void runCode()
 				m_stack.push_back(m_cells[m_cell]);
 			else if (m_ruc_code[i].find("CLRS") != std::string::npos)
 				m_stack.empty();
-			else if (m_ruc_code[i].find("RMVS") != std::string::npos)
-				if (m_stack.size() > 0) 
+			else if (m_ruc_code[i].find("RMVS") != std::string::npos) {
+				if (m_stack.size() > 0)
 					m_stack.erase(m_stack.begin());
+			} else if (m_ruc_code[i].find("EQL TOPS") != std::string::npos)
+				m_cells[m_cell] = m_stack[m_stack.size() - 1];
+			else if (m_ruc_code[i].find("ADDS") != std::string::npos)
+				addSubStack(m_stack[m_stack.size() - 1], m_stack[m_stack.size() - 2]);
+			else if (m_ruc_code[i].find("SUBS") != std::string::npos)
+				addSubStack(m_stack[m_stack.size() - 1], m_stack[m_stack.size() - 2]);
 
 		}
 		else if (m_ruc_code[i].find("STLP") != std::string::npos) {
@@ -110,4 +117,21 @@ void wrapPosition(int i)
 	for (int k = i; k < 0; k++)
 		(m_cell > 0 ? m_cell-- : m_cell = m_cells.size() - 1
 		);
+}
+
+void addSubStack(int x, int y)
+{
+	if (x + y > 255 && y > 0) {
+		for (int i = 0; i < y; i++)
+			(x < 255 ? x++ : x = 0);
+		m_stack.push_back(x);
+	}
+	else if (x + y < 0) {
+		for (int k = 0; k > y; k--)
+			(x > 0 ? x-- : x = 255);
+		m_stack.push_back(x);
+	}
+	else {
+		m_stack.push_back(x+y);
+	}
 }
