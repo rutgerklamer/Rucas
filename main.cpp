@@ -119,7 +119,7 @@ void runCode()
 				std::cout << "\nTERMINATING PROGRAM" << std::endl;
 			}
 			else if (m_ruc_code[i].find("IF") != std::string::npos && m_ruc_code[i].find("ENDIF") == std::string::npos) {
-				if (m_cells[m_cell] == 0) {
+				if (getIntFromString(m_ruc_code[i]) == 0) {
 					m_false_if_statement = true;
 					m_found_brackets = 0;
 				}
