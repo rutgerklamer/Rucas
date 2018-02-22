@@ -35,4 +35,11 @@ Usage is as follows:
 | PSHS | / | Push current cells value to the top of the stack  |
 | CLRS | / | Clear the stack |
 | RMVS | / | Remove the bottom most value of the stack |
+| EQL TOPS | / | Set the value of the element on top of the stack to the current cell |
+
+### Mathematics
+| Operation | Arguments | Explanation |
+| ----------- | ----------- | ----------- |
+| ADDS | / | Add the top two values on the stack together and push this value on top of the stack, If the value > 255 it will result in a int overflow  |
+| SUBS | / | Subtract the second-top value from the top value on the stack and push this value on top of the stack, If the value < 0 it will result in a int overflow   |
 
