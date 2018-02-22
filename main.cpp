@@ -23,7 +23,7 @@ void addSubStack(int x, int y);
 int main(int argc, char const *argv[])
 {
 	std::ifstream fin("main.ruc", std::ios_base::in);
-	m_inp = "AAABBB";
+	m_inp = "BAAABBB";
 	for (unsigned int i = 0; i < 30000; i++)
 		m_cells.push_back(0);
 	m_cell = 0;
@@ -88,7 +88,7 @@ void runCode()
 					std::cout << (m_cells[m_cell]) << std::flush;
 				}
 			}
-			else if (m_ruc_code[i] == "CINP"){
+			else if (m_ruc_code[i].find("CINP") != std::string::npos){
 				(m_inp_pos < m_inp.size() ? m_cells[m_cell] = static_cast<int>(m_inp[m_inp_pos]), m_inp_pos++ : m_cells[m_cell] = 0);
 			}
 			else if (m_ruc_code[i].find("PSHS") != std::string::npos){
