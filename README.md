@@ -8,6 +8,7 @@ Usage is as follows:
 | --------- | ----------- |
 | N | N is any number you want |
 | $CELL | $CELL is the value of the current cell |
+| $STACK | $STACK is the value of the top cell of the stack, if stack is empty, value is 0 |
 | N/A | N/A You don't have to enter anything at all |
 
 ### Cell manipulation
