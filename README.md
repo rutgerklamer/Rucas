@@ -3,22 +3,30 @@ Rucas is a small little esolang which can be used for many operations
 
 Usage is as follows:
 
+### Arguments
+| Arguments | Explanation |
+| --------- | ----------- |
+| N | N is any number you want |
+| $CELL | $CELL is the value of the current cell |
+| N/A | N/A You don't have to enter anything at all |
+
 ### Cell manipulation
 | Operation | Arguments | Explanation |
 | ----------- | ----------- | ----------- |
-| ADD | N | add n to current cell's value |
-| SUB |  N | subtract n  off current cell's value |
+| ADD | N/A : N : $ CELL | add (1 / N / $CELL) to current cell's value |
+| SUB | N/A : N : $ CELL | subtract (1 / N / $CELL)  off current cell's value |
 
 ### Pointer manipulation
 | Operation | Arguments | Explanation |
 | ----------- | ----------- | ----------- |
-| JMPR | N | Move the pointer n cells to the right |
-| JMPL |  N | Move the pointer n cells to the left |
+| JMPR | N/A : N : $ CELL | Move the pointer (1 / N / $CELL) cells to the right |
+| JMPL | N/A : N : $ CELL | Move the pointer (1 / N / $CELL) cells to the left |
+| JMP | N : $ CELL | Jump to cell (N / $CELL) |
 
 ### I/O 
 | Operation | Arguments | Explanation |
 | ----------- | ----------- | ----------- |
-| PRNTA | N/A : N | PRINT ASCII value, If N is given, PRINT ASCII vallue of (N) cells |
+| PRNTA | N/A : N : $CELL | PRINT ASCII value, If (N / $CELL) is given, PRINT ASCII vallue of (N / $CELL) cells |
 | PRNTR | N/A | PRINT RAW value, If N is given, PRINT RAW vallue of (N) cells  |
 | CINP |  N/A | Copy input to current cell we are on |
 
