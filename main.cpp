@@ -45,28 +45,29 @@ void runCode()
 	for (i = 0; i < m_ruc_code.size(); i++) {
 		if (!m_false_loop) {
 			if (m_ruc_code[i].find("JMP") != std::string::npos && m_ruc_code[i].find("JMPR") == std::string::npos && m_ruc_code[i].find("JMPL") == std::string::npos) {
-				if (getIntFromString(m_ruc_code[i]) >= 0 && getIntFromString(m_ruc_code[i]) < 30000){
+				if (getIntFromString(m_ruc_code[i]) >= 0 && getIntFromString(m_ruc_code[i]) < 30000) {
 					m_cell = getIntFromString(m_ruc_code[i]);
 				}
-			} else if (m_ruc_code[i].find("JMPR") != std::string::npos) {
+			}
+			else if (m_ruc_code[i].find("JMPR") != std::string::npos) {
 				wrapPosition(getIntFromString(m_ruc_code[i]));
 			}
-			else if (m_ruc_code[i].find("JMPL") != std::string::npos){
+			else if (m_ruc_code[i].find("JMPL") != std::string::npos) {
 				wrapPosition(-getIntFromString(m_ruc_code[i]));
 			}
-			 else if (m_ruc_code[i].find("ADD") != std::string::npos && m_ruc_code[i].find("ADDS") == std::string::npos){
+			else if (m_ruc_code[i].find("ADD") != std::string::npos && m_ruc_code[i].find("ADDS") == std::string::npos) {
 				wrapValue(getIntFromString(m_ruc_code[i]));
 			}
-			else if (m_ruc_code[i].find("SUB") != std::string::npos && m_ruc_code[i].find("SUBS") == std::string::npos){
+			else if (m_ruc_code[i].find("SUB") != std::string::npos && m_ruc_code[i].find("SUBS") == std::string::npos) {
 				wrapValue(-getIntFromString(m_ruc_code[i]));
 			}
-			else if (m_ruc_code[i].find("STLP") != std::string::npos){
+			else if (m_ruc_code[i].find("STLP") != std::string::npos) {
 				(m_cells[m_cell] != 0 ? m_current_loop.push_back(i) : m_false_loop = true, m_found_brackets = 0);
 			}
-			else if (m_ruc_code[i].find("NDLP") != std::string::npos){
+			else if (m_ruc_code[i].find("NDLP") != std::string::npos) {
 				((int)m_cells[m_cell] == 0 ? m_current_loop.pop_back() : i = m_current_loop[m_current_loop.size() - 1]);
 			}
-			else if (m_ruc_code[i].find("PRNTA") != std::string::npos){
+			else if (m_ruc_code[i].find("PRNTA") != std::string::npos) {
 				if (getIntFromString(m_ruc_code[i]) > 1) {
 					for (int j = 0; j < getIntFromString(m_ruc_code[i]); j++) {
 						std::cout << static_cast<char>(m_cells[m_cell]) << std::flush;
@@ -77,7 +78,7 @@ void runCode()
 					std::cout << static_cast<char>(m_cells[m_cell]) << std::flush;
 				}
 			}
-			else if (m_ruc_code[i].find("PRNTD") != std::string::npos){
+			else if (m_ruc_code[i].find("PRNTD") != std::string::npos) {
 				if (getIntFromString(m_ruc_code[i]) > 1) {
 					for (int j = 0; j < getIntFromString(m_ruc_code[i]); j++) {
 						std::cout << (m_cells[m_cell]) << std::flush;
@@ -88,30 +89,31 @@ void runCode()
 					std::cout << (m_cells[m_cell]) << std::flush;
 				}
 			}
-			else if (m_ruc_code[i].find("CINP") != std::string::npos){
+			else if (m_ruc_code[i].find("CINP") != std::string::npos) {
 				(m_inp_pos < m_inp.size() ? m_cells[m_cell] = static_cast<int>(m_inp[m_inp_pos]), m_inp_pos++ : m_cells[m_cell] = 0);
 			}
-			else if (m_ruc_code[i].find("PSHS") != std::string::npos){
+			else if (m_ruc_code[i].find("PSHS") != std::string::npos) {
 				m_stack.push_back(m_cells[m_cell]);
 			}
-			else if (m_ruc_code[i].find("CLRS") != std::string::npos){
+			else if (m_ruc_code[i].find("CLRS") != std::string::npos) {
 				m_stack.empty();
 			}
 			else if (m_ruc_code[i].find("RMVS") != std::string::npos) {
 				if (m_stack.size() > 0)
 					m_stack.erase(m_stack.begin());
 			}
-			else if (m_ruc_code[i].find("EQL TOPS") != std::string::npos){
+			else if (m_ruc_code[i].find("EQL TOPS") != std::string::npos) {
 				m_cells[m_cell] = m_stack[m_stack.size() - 1];
 			}
-			else if (m_ruc_code[i].find("ADDS") != std::string::npos){
+			else if (m_ruc_code[i].find("ADDS") != std::string::npos) {
 				addSubStack(m_stack[m_stack.size() - 1], m_stack[m_stack.size() - 2]);
 			}
-			else if (m_ruc_code[i].find("SUBS") != std::string::npos){
+			else if (m_ruc_code[i].find("SUBS") != std::string::npos) {
 				addSubStack(m_stack[m_stack.size() - 1], m_stack[m_stack.size() - 2]);
 			}
-			else if (m_ruc_code[i].find("HALT") != std::string::npos){
+			else if (m_ruc_code[i].find("HALT") != std::string::npos) {
 				i = m_ruc_code.size();
+				std::cout << "\nTERMINATING PROGRAM" << std::endl;
 			}
 
 		}
@@ -130,9 +132,12 @@ int getIntFromString(std::string s)
 	for (int i = 0; i < s.size(); i++) {
 		if ((int)s[i] >= 47 && (int)s[i] <= 57)
 			s.erase(s.begin(), s.begin() + i);
-		else if (i >= s.size() - 1){
+		else if (i >= s.size() - 1) {
 			if (s.find("$CELL") != std::string::npos)
 				return m_cells[m_cell];
+			else if (s.find("$STACK") != std::string::npos)
+				if (m_stack.size() > 0)
+					return m_stack[m_stack.size() - 1];
 			else
 				return 1;
 		}
@@ -143,22 +148,22 @@ int getIntFromString(std::string s)
 void wrapValue(int i)
 {
 	if (i > 0)
-	for (int k = 0; k < i; k++)
-		(m_cells[m_cell] < 255 ? m_cells[m_cell]++ : m_cells[m_cell] = 0);
+		for (int k = 0; k < i; k++)
+			(m_cells[m_cell] < 255 ? m_cells[m_cell]++ : m_cells[m_cell] = 0);
 	else
-	for (int k = i; k < 0; k++)
-		(m_cells[m_cell] > 0 ? m_cells[m_cell]-- : m_cells[m_cell] = 255);
+		for (int k = i; k < 0; k++)
+			(m_cells[m_cell] > 0 ? m_cells[m_cell]-- : m_cells[m_cell] = 255);
 }
 
 void wrapPosition(int i)
 {
 	if (i > 0)
-	for (int k = 0; k < i; k++)
-		(m_cell < m_cells.size() ? m_cell++ : m_cell = 0);
+		for (int k = 0; k < i; k++)
+			(m_cell < m_cells.size() ? m_cell++ : m_cell = 0);
 	else
-	for (int k = i; k < 0; k++)
-		(m_cell > 0 ? m_cell-- : m_cell = m_cells.size() - 1
-		);
+		for (int k = i; k < 0; k++)
+			(m_cell > 0 ? m_cell-- : m_cell = m_cells.size() - 1
+				);
 }
 
 void addSubStack(int x, int y)
