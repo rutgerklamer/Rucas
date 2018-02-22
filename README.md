@@ -27,3 +27,12 @@ Usage is as follows:
 | ----------- | ----------- | ----------- |
 | STLP | / | Start a loop if the current cells value isn't 0  |
 | NDLP | / | End a loop if the current cell value is 0 |
+
+
+### Stack manipulation
+| Operation | Arguments | Explanation |
+| ----------- | ----------- | ----------- |
+| PSHS | / | Push current cells value to the top of the stack  |
+| CLRS | / | Clear the stack |
+| RMVS | / | Remove the bottom most value of the stack |
+
