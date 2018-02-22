@@ -18,28 +18,28 @@ Usage is as follows:
 ### I/O 
 | Operation | Arguments | Explanation |
 | ----------- | ----------- | ----------- |
-| PRNTA | / | PRINT ASCII value |
-| PRNTR | / | PRINT RAW value |
-| CINP |  / | Copy input to current cell we are on |
+| PRNTA | N/A : N | PRINT ASCII value, If N is given, PRINT ASCII vallue of (N) cells |
+| PRNTR | N/A | PRINT RAW value, If N is given, PRINT RAW vallue of (N) cells  |
+| CINP |  N/A | Copy input to current cell we are on |
 
 ### LOOP
 | Operation | Arguments | Explanation |
 | ----------- | ----------- | ----------- |
-| STLP | / | Start a loop if the current cells value isn't 0  |
-| NDLP | / | End a loop if the current cell value is 0 |
+| STLP | N/A | Start a loop if the current cells value isn't 0  |
+| NDLP | N/A | End a loop if the current cell value is 0 |
 
 
 ### Stack manipulation
 | Operation | Arguments | Explanation |
 | ----------- | ----------- | ----------- |
-| PSHS | / | Push current cells value to the top of the stack  |
-| CLRS | / | Clear the stack |
-| RMVS | / | Remove the bottom most value of the stack |
-| EQL TOPS | / | Set the value of the element on top of the stack to the current cell |
+| PSHS | N/A | Push current cells value to the top of the stack  |
+| CLRS | N/A | Clear the stack |
+| RMVS | N/A | Remove the bottom most value of the stack |
+| EQL TOPS | N/A | Set the value of the element on top of the stack to the current cell |
 
 ### Mathematics
 | Operation | Arguments | Explanation |
 | ----------- | ----------- | ----------- |
-| ADDS | / | Add the top two values on the stack together and push this value on top of the stack, If the value > 255 it will result in a int overflow  |
-| SUBS | / | Subtract the second-top value from the top value on the stack and push this value on top of the stack, If the value < 0 it will result in a int overflow   |
+| ADDS | N/A | Add the top two values on the stack together and push this value on top of the stack, If the value > 255 it will result in a int overflow  |
+| SUBS | N/A | Subtract the second-top value from the top value on the stack and push this value on top of the stack, If the value < 0 it will result in a int overflow   |
 
