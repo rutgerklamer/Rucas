@@ -44,17 +44,17 @@ void runCode()
 	int i = 0;
 	for (i = 0; i < m_ruc_code.size(); i++) {
 		if (!m_false_loop) {
-			if (m_ruc_code[i].find("JMPR") != std::string::npos){
-				wrapPosition(getIntFromString(m_ruc_code[i]));
-			}
-			else if (m_ruc_code[i].find("JMPL") != std::string::npos && ){
-				wrapPosition(-getIntFromString(m_ruc_code[i]));
-			}
-			else if (m_ruc_code[i].find("JMP") != std::string::npos) {
-				if (getIntFromString(m_ruc_code[i]) > 0 && getIntFromString(m_ruc_code[i]) < 30000){
+			if (m_ruc_code[i].find("JMP") != std::string::npos && m_ruc_code[i].find("JMPR") == std::string::npos && m_ruc_code[i].find("JMPL") == std::string::npos) {
+				if (getIntFromString(m_ruc_code[i]) >= 0 && getIntFromString(m_ruc_code[i]) < 30000){
 					m_cell = getIntFromString(m_ruc_code[i]);
 				}
-			} else if (m_ruc_code[i].find("ADD") != std::string::npos && m_ruc_code[i].find("ADDS") == std::string::npos){
+			} else if (m_ruc_code[i].find("JMPR") != std::string::npos) {
+				wrapPosition(getIntFromString(m_ruc_code[i]));
+			}
+			else if (m_ruc_code[i].find("JMPL") != std::string::npos){
+				wrapPosition(-getIntFromString(m_ruc_code[i]));
+			}
+			 else if (m_ruc_code[i].find("ADD") != std::string::npos && m_ruc_code[i].find("ADDS") == std::string::npos){
 				wrapValue(getIntFromString(m_ruc_code[i]));
 			}
 			else if (m_ruc_code[i].find("SUB") != std::string::npos && m_ruc_code[i].find("SUBS") == std::string::npos){
