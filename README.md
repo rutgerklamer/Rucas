@@ -31,11 +31,13 @@ Usage is as follows:
 | PRNTR | N/A | PRINT RAW value, If N is given, PRINT RAW vallue of (N) cells  |
 | CINP |  N/A | Copy input to current cell we are on |
 
-### LOOP
+### Statements
 | Operation | Arguments | Explanation |
 | ----------- | ----------- | ----------- |
 | STLP | N/A | Start a loop if the current cells value isn't 0  |
 | NDLP | N/A | End a loop if the current cell value is 0 |
+| IF | $CELL : $STACK | Runs the code inside the statement if ($CELL: $STACK) > 0 |
+| ENDIF | N/A | End if statement |
 
 
 ### Stack manipulation
