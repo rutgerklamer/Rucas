@@ -14,20 +14,20 @@ Usage is as follows:
 ### Cell manipulation
 | Operation | Arguments | Explanation |
 | ----------- | ----------- | ----------- |
-| ADD | N/A : N : $ CELL | add (1 / N / $CELL) to current cell's value |
-| SUB | N/A : N : $ CELL | subtract (1 / N / $CELL)  off current cell's value |
+| ADD | N/A : N : $CELL : $STACK | add (1 : N : $CELL : $STACK) to current cell's value |
+| SUB | N/A : N : $CELL : $STACK | subtract (1 : N : $CELL : $STACK)  off current cell's value |
 
 ### Pointer manipulation
 | Operation | Arguments | Explanation |
 | ----------- | ----------- | ----------- |
-| JMPR | N/A : N : $ CELL | Move the pointer (1 / N / $CELL) cells to the right |
-| JMPL | N/A : N : $ CELL | Move the pointer (1 / N / $CELL) cells to the left |
+| JMPR | N/A : N : $CELL : $STACK | Move the pointer (1 : N : $CELL : $STACK) cells to the right |
+| JMPL | N/A : N : $CELL : $STACK | Move the pointer (1 : N : $CELL : $STACK) cells to the left |
 | JMP | N : $ CELL | Jump to cell (N / $CELL) |
 
 ### I/O 
 | Operation | Arguments | Explanation |
 | ----------- | ----------- | ----------- |
-| PRNTA | N/A : N : $CELL | PRINT ASCII value, If (N / $CELL) is given, PRINT ASCII vallue of (N / $CELL) cells |
+| PRNTA | N/A : N : $CELL : $STACK | PRINT ASCII value, If (N : $CELL : $STACK) is given, PRINT ASCII vallue of (N / $CELL) cells |
 | PRNTR | N/A | PRINT RAW value, If N is given, PRINT RAW vallue of (N) cells  |
 | CINP |  N/A | Copy input to current cell we are on |
 
