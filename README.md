@@ -28,7 +28,7 @@ Usage is as follows:
 | Operation | Arguments | Explanation |
 | ----------- | ----------- | ----------- |
 | PRNTA | N/A : N : $CELL : $STACK | PRINT ASCII value, If (N : $CELL : $STACK) is given, PRINT ASCII vallue of (N / $CELL) cells |
-| PRNTR | N/A | PRINT RAW value, If N is given, PRINT RAW vallue of (N) cells  |
+| PRNTD | N/A | PRINT Decimal value, If N is given, PRINT Decimal value of (N) cells  |
 | CINP |  N/A | Copy input to current cell we are on |
 
 ### Statements
