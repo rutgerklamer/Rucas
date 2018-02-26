@@ -119,13 +119,13 @@ void runCode()
 				std::cout << "\nTERMINATING PROGRAM" << std::endl;
 			}
 			else if (m_ruc_code[i].find("IF") != std::string::npos && m_ruc_code[i].find("ENDIF") == std::string::npos) {
-				if (getIntFromString(m_ruc_code[i]) == 0) {
+				if (m_ruc_code[i].find("EQL") != std::string::npos && getIntFromString(m_ruc_code[i]) != m_cells[m_cell] || m_ruc_code[i].find("EQL") == std::string::npos && getIntFromString(m_ruc_code[i]) == 0) {
 					m_false_if_statement = true;
 					m_found_brackets = 0;
-				}
+				} 
 			}
 			else if (m_ruc_code[i].find("ENDIF") != std::string::npos) {
-					m_found_brackets = 0;
+				m_found_brackets = 0;
 			}
 		}
 		else if (m_ruc_code[i].find("STLP") != std::string::npos && m_false_loop) {
@@ -138,7 +138,7 @@ void runCode()
 		}
 		else if (m_ruc_code[i].find("IF") != std::string::npos && m_false_if_statement && m_ruc_code[i].find("ENDIF") == std::string::npos) {
 			m_found_brackets++;
-			
+
 		}
 		else if (m_ruc_code[i].find("ENDIF") != std::string::npos && m_false_if_statement) {
 			m_found_brackets--;
@@ -159,7 +159,8 @@ int getIntFromString(std::string s)
 			else if (s.find("$STACK") != std::string::npos) {
 				if (m_stack.size() > 0)
 					return m_stack[m_stack.size() - 1];
-			} else
+			}
+			else
 				return 1;
 		}
 	}
@@ -169,22 +170,22 @@ int getIntFromString(std::string s)
 void wrapValue(int i)
 {
 	if (i > 0)
-		for (int k = 0; k < i; k++)
-			(m_cells[m_cell] < 255 ? m_cells[m_cell]++ : m_cells[m_cell] = 0);
+	for (int k = 0; k < i; k++)
+		(m_cells[m_cell] < 255 ? m_cells[m_cell]++ : m_cells[m_cell] = 0);
 	else
-		for (int k = i; k < 0; k++)
-			(m_cells[m_cell] > 0 ? m_cells[m_cell]-- : m_cells[m_cell] = 255);
+	for (int k = i; k < 0; k++)
+		(m_cells[m_cell] > 0 ? m_cells[m_cell]-- : m_cells[m_cell] = 255);
 }
 
 void wrapPosition(int i)
 {
 	if (i > 0)
-		for (int k = 0; k < i; k++)
-			(m_cell < m_cells.size() ? m_cell++ : m_cell = 0);
+	for (int k = 0; k < i; k++)
+		(m_cell < m_cells.size() ? m_cell++ : m_cell = 0);
 	else
-		for (int k = i; k < 0; k++)
-			(m_cell > 0 ? m_cell-- : m_cell = m_cells.size() - 1
-				);
+	for (int k = i; k < 0; k++)
+		(m_cell > 0 ? m_cell-- : m_cell = m_cells.size() - 1
+		);
 }
 
 void addSubStack(int x, int y)
