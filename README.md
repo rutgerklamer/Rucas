@@ -37,6 +37,7 @@ Usage is as follows:
 | STLP | N/A | Start a loop if the current cells value isn't 0  |
 | NDLP | N/A | End a loop if the current cell value is 0 |
 | IF | $CELL : $STACK | Runs the code inside the statement if ($CELL: $STACK) > 0 |
+| IF EQL | N : $STACK | Runs the code inside the statement if (N : $STACK) == current cell |
 | ENDIF | N/A | End if statement |
 
 
