@@ -1,0 +1,12 @@
+# Reads one character and prints 'Y' if it was a 'y' (ASCII 121)
+CINP
+IF EQL 121
+	JMPR
+	ADD 89
+	PRNTA
+	JMPL
+ENDIF
+JMPR 2
+ADD 10
+PRNTA
+HALT

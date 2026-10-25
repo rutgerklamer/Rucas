@@ -1,0 +1,30 @@
+# Prints the first 14 Fibonacci numbers (everything that fits in a 0-255 cell)
+# Cells: 0 = counter, 1 = a, 2 = b, 3 = space, 4 = newline
+ADD 14
+JMPR 2
+ADD 1
+JMPR
+ADD 32
+JMPR
+ADD 10
+JMPL 4
+STLP
+	JMPR
+	PRNTD
+	JMPR 2
+	PRNTA
+	JMPL 2
+	CLRS
+	PSHS
+	JMPR
+	ADD $STACK
+	PSHS
+	SUBS
+	JMPL
+	EQL TOPS
+	JMPL
+	SUB
+NDLP
+JMPR 4
+PRNTA
+HALT
