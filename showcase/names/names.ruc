@@ -1,0 +1,166 @@
+# Learns which letter follows which from a list of names, then writes 20 new names
+
+BITS 32
+
+JMP 2
+ADD 27
+JMP 3
+ADD 1000
+JMP 4
+ADD 1729
+JMP 5
+ADD 2018                # the seed
+JMP 12
+ADD 1103515245
+JMP 13
+ADD 12345
+JMP 14
+ADD 65536
+
+# Learn; read the names and count every pair of symbols
+JMP 0
+CINP
+STLP                    # until the end of the input
+	JMP 11
+	SUB $CELL
+	JMP 0
+	IF MORE 96              # a letter
+		SUB 96
+		JMP 11
+		ADD
+	ELSE
+		IF EQL 10               # a line break ends the name
+			SUB $CELL
+			JMP 11
+			ADD
+		ENDIF
+	ENDIF
+	JMP 11
+	IF
+		CLRS                    # count[prev][symbol] += 1
+		JMP 2
+		PSHS
+		JMP 1
+		PSHS
+		MULS
+		JMP 3
+		PSHS
+		ADDS
+		JMP 0
+		PSHS
+		ADDS
+		JMP $STACK
+		ADD
+		CLRS                    # total[prev] += 1
+		JMP 4
+		PSHS
+		JMP 1
+		PSHS
+		ADDS
+		JMP $STACK
+		ADD
+		CLRS                    # prev = symbol
+		JMP 0
+		PSHS
+		JMP 1
+		EQL TOPS
+	ENDIF
+	JMP 0
+	CINP
+NDLP
+
+# Write 20 names
+JMP 9
+ADD 20
+STLP
+	JMP 1
+	SUB $CELL               # a name starts after symbol 0
+	JMP 10
+	SUB $CELL
+	ADD
+	STLP                    # one letter per round
+		CLRS                    # the next random state; state * 1103515245 + 12345
+		JMP 12
+		PSHS
+		JMP 5
+		PSHS
+		MULS
+		JMP 13
+		PSHS
+		ADDS
+		JMP 5
+		EQL TOPS
+		CLRS                    # r = (state / 65536) mod total[prev]
+		JMP 14
+		PSHS
+		JMP 5
+		PSHS
+		DIVS
+		JMP 6
+		EQL TOPS
+		CLRS
+		JMP 4
+		PSHS
+		JMP 1
+		PSHS
+		ADDS
+		JMP $STACK
+		PSHS
+		JMP 6
+		PSHS
+		MODS
+		EQL TOPS
+
+		JMP 7                   # walk the row of prev; the symbol whose counts cover r
+		SUB $CELL
+		JMP 8
+		SUB $CELL
+		ADD
+		STLP
+			CLRS                    # count[prev][sym] on top of the stack
+			JMP 2
+			PSHS
+			JMP 1
+			PSHS
+			MULS
+			JMP 3
+			PSHS
+			ADDS
+			JMP 7
+			PSHS
+			ADDS
+			JMP $STACK
+			PSHS
+			JMP 6
+			IF LESS $STACK          # found it
+				JMP 8
+				SUB $CELL
+			ELSE
+				SUB $STACK              # r -= count[prev][sym]
+				JMP 7
+				ADD
+			ENDIF
+			JMP 8
+		NDLP
+
+		JMP 7
+		IF                      # a letter; print it, it is the next prev
+			ADD 96
+			PRNTA
+			SUB 96
+			CLRS
+			PSHS
+			JMP 1
+			EQL TOPS
+		ELSE                    # symbol 0; the name is done
+			ADD 10
+			PRNTA
+			SUB 10
+			JMP 10
+			SUB $CELL
+		ENDIF
+		JMP 10
+	NDLP
+	JMP 9
+	SUB
+NDLP
