@@ -1,0 +1,117 @@
+# The same language model as names.ruc, shorter; it follows pointers to the counts and needs no totals
+
+BITS 32
+
+JMP 32
+ADD 2018                # the seed
+JMPR
+ADD 1103515245
+JMPR
+ADD 12345
+JMPR
+ADD 65536
+
+JMP 0                   # cell s points at the row of counts after symbol s
+ADD 100
+STLP
+	CLRS
+	PSHS
+	JMPR
+	ADD $STACK
+	ADD 27
+	IF EQL 802
+		JMPR                    # cell 27 is still 0, so the loop ends
+	ENDIF
+NDLP
+
+# Learn from the names
+JMP 27
+CINP
+STLP                    # until the end of the input
+	IF EQL 10               # a line break is symbol 0
+		ADD 86
+	ENDIF
+	IF MORE 95              # a letter or a line break
+		SUB 96
+		CLRS
+		PSHS
+		JMP 28
+		JMP $CELL
+		JMP $CELL               # the row of prev
+		JMPR $STACK
+		ADD                     # count[prev][symbol] += 1
+		JMP 28
+		EQL TOPS                # prev = symbol
+	ENDIF
+	JMP 27
+	CINP
+NDLP
+
+# Write 20 names
+JMP 28
+SUB $CELL               # a name starts after symbol 0
+JMP 31
+ADD 20
+STLP
+	STLP                    # one letter per round, until symbol 0
+		JMP 28                  # cell 29 = the row of prev, the walk starts at symbol 0
+		JMP $CELL
+		CLRS
+		PSHS
+		JMP 29
+		EQL TOPS
+		JMP 28
+		SUB $CELL
+		CLRS                    # the next random state; state * 1103515245 + 12345
+		JMP 33
+		PSHS
+		JMP 32
+		PSHS
+		MULS
+		JMP 34
+		PSHS
+		ADDS
+		JMP 32
+		EQL TOPS
+		JMP 35                  # r = state / 65536
+		PSHS
+		JMP 32
+		PSHS
+		DIVS
+		JMP 30
+		EQL TOPS
+		JMP 31
+		STLP                    # walk around the row until r falls inside a count
+			CLRS
+			JMP 28
+			PSHS
+			JMP 29
+			JMP $CELL
+			JMPR $STACK
+			PSHS
+			JMP 30
+			IF LESS $STACK          # found it
+				JMP 27                  # cell 27 is 0 since the input ended, so the walk ends
+			ELSE
+				SUB $STACK              # r -= count[prev][symbol]
+				JMP 28
+				ADD
+				IF EQL 27               # past z, back to symbol 0
+					SUB $CELL
+				ENDIF
+				JMP 31
+			ENDIF
+		NDLP
+		JMP 28
+		IF                      # a letter
+			ADD 96
+			PRNTA
+			SUB 96
+		ENDIF
+	NDLP
+	ADD 10
+	PRNTA
+	SUB 10
+	JMP 31
+	SUB
+NDLP
