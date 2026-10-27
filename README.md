@@ -15,7 +15,7 @@ PRNTA
 | ---- | ---------- |
 | [rucas.cpp](rucas.cpp) | The interpreter. A single C++ file with no dependencies. |
 | [samples](samples) | Example programs from 2018. They run unchanged on `rucas.cpp`. |
-| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, and the names it learns from. |
+| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. |
 | [main.cpp](main.cpp) | The original 2018 interpreter, kept as it was. It is Windows-only and has the bugs that `rucas.cpp` fixes. |
 | [main.ruc](main.ruc) | The original 2018 scratch program. It contains two typos (`JMPRT` and `PRNT`) that the old interpreter silently accepted; `rucas.cpp` points them out. |
 
@@ -206,6 +206,12 @@ nnamelacidreriolian
 ```
 
 To write other names, change the seed on the line `ADD 2018`, or give it a list of your own; one name per line, letters a to z.
+
+[names_optimised.ruc](showcase/names/names_optimised.ruc) writes the same names in 109 instructions instead of 157. Cells 0 to 26 point at the rows of counts, so two `JMP $CELL` find a row without any arithmetic, and it walks around a row until the random number fits, so it needs no totals and no `MODS`.
+
+```bash
+./rucas showcase/names/names_optimised.ruc showcase/names/names.txt
+```
 
 ### Samples
 
