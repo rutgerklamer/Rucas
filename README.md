@@ -15,7 +15,7 @@ PRNTA
 | ---- | ---------- |
 | [rucas.cpp](rucas.cpp) | The interpreter. A single C++ file with no dependencies. |
 | [samples](samples) | Example programs from 2018. They run unchanged on `rucas.cpp`. |
-| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. |
+| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. [lm_base](showcase/lm_base) is a base of functions for bigger models. |
 | [main.cpp](main.cpp) | The original 2018 interpreter, kept as it was. It is Windows-only and has the bugs that `rucas.cpp` fixes. |
 | [main.ruc](main.ruc) | The original 2018 scratch program. It contains two typos (`JMPRT` and `PRNT`) that the old interpreter silently accepted; `rucas.cpp` points them out. |
 
@@ -51,6 +51,12 @@ Or give it as a file after the program;
 
 ```bash
 ./rucas showcase/names/names.ruc showcase/names/names.txt
+```
+
+A program can be spread over several files. Give them in order and they run as one program; an input file still comes last.
+
+```bash
+./rucas showcase/lm_base/base.ruc showcase/lm_base/test.ruc
 ```
 
 ## The machine
@@ -211,6 +217,51 @@ To write other names, change the seed on the line `ADD 2018`, or give it a list 
 
 ```bash
 ./rucas showcase/names/names_optimised.ruc showcase/names/names.txt
+```
+
+### A base for bigger models
+
+[lm_base](showcase/lm_base) gives Rucas functions without new instructions. The whole program runs in one loop. Cell 0 holds the number of the piece that runs next, every piece is an `IF EQL` block, and a call keeps the piece to come back to on a stack in cells 32 to 47. [base.ruc](showcase/lm_base/base.ruc) opens that loop and holds the functions, and a program's own file adds pieces 1 to 99 and closes the loop.
+
+| Piece | Function | What it does |
+| ----- | -------- | ------------ |
+| 100 | FMUL | c = a × b |
+| 110 | DOT | c = the dot product of n numbers from a and n numbers from b |
+| 120 | PRNT | Prints n numbers from a, one per line with four decimals |
+| 130 | ALLOC | c = the first of n fresh cells |
+| 150 | EXP | Turns each of n numbers from a into e to its power |
+| 160 | TANH | Turns each of n numbers from a into its tanh |
+
+Numbers are signed, with 12 bits after the point, so 1.0 is 4096. A list is n numbers starting at a cell, a step apart; the step for a is in cell 6 and the step for b in cell 7, both 1 to start, so a step of the row length reads a column. Arguments go in cells 2 (a), 3 (b) and 5 (n), and the result comes back in cell 4 (c). A function leaves a, b, n and the steps as they were. Cells 48 to 63 are the program's own, and ALLOC hands out cells from 64. A call to FMUL that comes back to piece 2;
+
+```
+JMP 1
+ADD
+JMP $CELL
+ADD 2
+JMP 0
+SUB $CELL
+ADD 100
+```
+
+[test.ruc](showcase/lm_base/test.ruc) calls every function. It reads a matrix by its rows and by its columns, then takes e to the power 0, 1, −1 and 2.5, and the tanh of 0, 0.5, −1 and 3.
+
+```bash
+./rucas showcase/lm_base/base.ruc showcase/lm_base/test.ruc
+```
+
+```
+-1.1250
+1.0000
+-2.0000
+1.0000
+2.7182
+0.3676
+12.1816
+0.0000
+0.4624
+-0.7617
+0.9951
 ```
 
 ### Samples
