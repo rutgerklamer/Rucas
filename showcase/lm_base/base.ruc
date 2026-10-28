@@ -1,0 +1,564 @@
+# The base for bigger language models; functions in plain Rucas on signed numbers with 12 bits after the point
+
+BITS 32                 # room for the product of two numbers up to 8, with 24 bits after the point
+
+JMP 1
+ADD 31                  # return notes go on the tape in cells 32 to 47, since CLRS wipes the stack before every sum
+JMP 6
+ADD 1                   # steps of 1 walk along a row; set the row length instead to walk down a column
+JMPR
+ADD 1
+JMPR
+ADD 64                  # ALLOC hands out cells from here, so a model never needs a fixed address
+JMP 10
+ADD 4096                # 1.0; a cell holds whole numbers only, so every number is stored times 4096
+JMPR
+ADD 45                  # PSHS and PRNTA only work on cells, so the characters and numbers they need get cells
+JMPR
+ADD 46
+JMPR
+ADD 10000
+JMPR
+ADD 48
+JMPR
+ADD 10
+JMPR
+ADD 2839                # ln 2, for exp
+JMPR
+ADD 16777216            # 1.0 times 1.0, for dividing 1 by a number
+JMP 0
+ADD 1                   # the program starts at its piece 1; the base keeps 100 and up, so the two never clash
+
+STLP                    # Rucas cannot jump, so one loop runs every piece; the program's own file closes it
+	JMP 0                   # IF EQL looks at the current cell, so every piece starts back on cell 0
+	IF EQL 100              # FMUL, c = a * b
+		CLRS
+		JMP 2
+		PSHS
+		JMP 3
+		PSHS
+		MULS
+		JMP 4
+		EQL TOPS                # wrapped to 32 bits a signed product is still right, but it has 24 bits after the point
+
+		IF MORE 2147483647      # negative, and DIVS knows no minus, so it divides the size and puts the minus back
+			CLRS
+			PSHS
+			SUB $CELL
+			SUB $STACK
+			CLRS
+			JMP 10
+			PSHS
+			JMP 4
+			PSHS
+			DIVS
+			EQL TOPS
+			CLRS
+			PSHS
+			SUB $CELL
+			SUB $STACK
+		ELSE
+			CLRS
+			JMP 10
+			PSHS
+			JMP 4
+			PSHS
+			DIVS
+			EQL TOPS
+		ENDIF
+
+		JMP 1                   # return, to the piece written on the top note
+		JMP $CELL
+		CLRS
+		PSHS
+		SUB $CELL
+		JMP 1
+		SUB
+		JMP 0
+		EQL TOPS
+	ENDIF
+	JMP 0
+	IF EQL 110              # DOT, c = the sum of x[i] * y[i], with x at a and y at b, n long, each with its own step
+		CLRS                    # copies, so a, b and n stay as the caller left them
+		JMP 2
+		PSHS
+		JMP 28
+		EQL TOPS
+		CLRS
+		JMP 3
+		PSHS
+		JMP 30
+		EQL TOPS
+		CLRS
+		JMP 5
+		PSHS
+		JMP 29
+		EQL TOPS
+		JMP 4
+		SUB $CELL
+
+		JMP 29
+		STLP
+			CLRS
+			JMP 28
+			JMP $CELL
+			PSHS
+			JMP 30
+			JMP $CELL
+			PSHS
+			MULS                    # multiplied here and not by FMUL, since a call for every number costs a trip around the loop
+			JMP 20
+			EQL TOPS
+
+			IF MORE 2147483647      # the same sign trick as FMUL
+				CLRS
+				PSHS
+				SUB $CELL
+				SUB $STACK
+				CLRS
+				JMP 10
+				PSHS
+				JMP 20
+				PSHS
+				DIVS
+				JMP 4
+				SUB $STACK
+			ELSE
+				CLRS
+				JMP 10
+				PSHS
+				JMP 20
+				PSHS
+				DIVS
+				JMP 4
+				ADD $STACK
+			ENDIF
+
+			CLRS                    # with steps, the same DOT reads rows and columns
+			JMP 6
+			PSHS
+			JMP 28
+			ADD $STACK
+			JMP 7
+			PSHS
+			JMP 30
+			ADD $STACK
+			JMP 29
+			SUB
+		NDLP
+
+		JMP 1                   # return
+		JMP $CELL
+		CLRS
+		PSHS
+		SUB $CELL
+		JMP 1
+		SUB
+		JMP 0
+		EQL TOPS
+	ENDIF
+	JMP 0
+	IF EQL 120              # PRNT, print the n numbers from a, a step apart, one per line with four decimals
+		CLRS                    # copies, so a and n stay as the caller left them
+		JMP 2
+		PSHS
+		JMP 28
+		EQL TOPS
+		CLRS
+		JMP 5
+		PSHS
+		JMP 29
+		EQL TOPS
+
+		JMP 29
+		STLP
+			CLRS
+			JMP 28
+			JMP $CELL
+			PSHS
+			JMP 20
+			EQL TOPS                # a copy, so printing leaves the number as it was
+
+			IF MORE 2147483647      # PRNTD knows no minus either, so print one and go on with the size
+				JMP 11
+				PRNTA
+				JMP 20
+				CLRS
+				PSHS
+				SUB $CELL
+				SUB $STACK
+			ENDIF
+
+			CLRS
+			JMP 10
+			PSHS
+			JMP 20
+			PSHS
+			DIVS
+			JMP 21
+			EQL TOPS
+			PRNTD
+			JMP 12
+			PRNTA
+
+			CLRS
+			JMP 10
+			PSHS
+			JMP 20
+			PSHS
+			MODS
+			JMP 21
+			EQL TOPS
+			CLRS                    # 4096ths into ten-thousandths, for four decimals
+			JMP 13
+			PSHS
+			JMP 21
+			PSHS
+			MULS
+			EQL TOPS
+			CLRS
+			JMP 10
+			PSHS
+			JMP 21
+			PSHS
+			DIVS
+			EQL TOPS
+			IF LESS 1000            # PRNTD drops leading zeros, so 0.0625 needs its zero put back
+				JMP 14
+				PRNTA
+			ENDIF
+			JMP 21
+			IF LESS 100
+				JMP 14
+				PRNTA
+			ENDIF
+			JMP 21
+			IF LESS 10
+				JMP 14
+				PRNTA
+			ENDIF
+			JMP 21
+			PRNTD
+			JMP 15
+			PRNTA
+
+			CLRS
+			JMP 6
+			PSHS
+			JMP 28
+			ADD $STACK
+			JMP 29
+			SUB
+		NDLP
+
+		JMP 1                   # return
+		JMP $CELL
+		CLRS
+		PSHS
+		SUB $CELL
+		JMP 1
+		SUB
+		JMP 0
+		EQL TOPS
+	ENDIF
+	JMP 0
+	IF EQL 130              # ALLOC, c = the first of n fresh cells; nothing is given back, since a model sets up its lists once
+		CLRS
+		JMP 8
+		PSHS
+		JMP 4
+		EQL TOPS
+		CLRS
+		JMP 5
+		PSHS
+		JMP 8
+		ADD $STACK
+
+		JMP 1                   # return
+		JMP $CELL
+		CLRS
+		PSHS
+		SUB $CELL
+		JMP 1
+		SUB
+		JMP 0
+		EQL TOPS
+	ENDIF
+	JMP 0
+	IF EQL 140              # EXP1, cell 22 becomes e to the power cell 22; EXP and TANH share it
+		JMP 27
+		SUB $CELL
+		JMP 22
+		IF MORE 2147483647      # e^-x = 1 / e^x, so work with the size and divide at the end
+			JMP 27
+			ADD
+			JMP 22
+			CLRS
+			PSHS
+			SUB $CELL
+			SUB $STACK
+		ENDIF
+		IF MORE 49152           # e^12 is about the most a cell holds, and e^-12 rounds to 0 anyway
+			SUB $CELL
+			ADD 49152
+		ENDIF
+
+		CLRS                    # x = k ln 2 + r, so e^x = 2^k e^r with r small enough for a short series
+		JMP 16
+		PSHS
+		JMP 22
+		PSHS
+		DIVS
+		JMP 23
+		EQL TOPS
+		CLRS
+		JMP 16
+		PSHS
+		JMP 22
+		PSHS
+		MODS
+		JMP 24
+		EQL TOPS
+
+		CLRS
+		JMP 10
+		PSHS
+		JMP 25
+		EQL TOPS
+		JMP 26
+		SUB $CELL
+		ADD 5
+		STLP                    # e^r = 1 + r(1 + r/2(1 + r/3(1 + r/4(1 + r/5)))), worked from the inside out
+			CLRS
+			JMP 24
+			PSHS
+			JMP 25
+			PSHS
+			MULS
+			EQL TOPS
+			CLRS
+			JMP 10
+			PSHS
+			JMP 25
+			PSHS
+			DIVS
+			EQL TOPS
+			CLRS
+			JMP 26
+			PSHS
+			JMP 25
+			PSHS
+			DIVS
+			EQL TOPS
+			ADD 4096
+			JMP 26
+			SUB
+		NDLP
+
+		JMP 23
+		STLP                    # doubling k times is the 2^k
+			JMP 25
+			ADD $CELL
+			JMP 23
+			SUB
+		NDLP
+
+		JMP 27
+		IF
+			CLRS
+			JMP 25
+			PSHS
+			JMP 17
+			PSHS
+			DIVS
+			JMP 25
+			EQL TOPS
+		ENDIF
+		CLRS
+		JMP 25
+		PSHS
+		JMP 22
+		EQL TOPS
+
+		JMP 1                   # return
+		JMP $CELL
+		CLRS
+		PSHS
+		SUB $CELL
+		JMP 1
+		SUB
+		JMP 0
+		EQL TOPS
+	ENDIF
+	JMP 0
+	IF EQL 150              # EXP, each of the n numbers from a, a step apart, becomes e to its power
+		CLRS                    # copies, so a and n stay as the caller left them
+		JMP 2
+		PSHS
+		JMP 28
+		EQL TOPS
+		CLRS
+		JMP 5
+		PSHS
+		JMP 29
+		EQL TOPS
+		JMP 0
+		SUB $CELL
+		ADD 151
+	ENDIF
+	JMP 0
+	IF EQL 151              # one number per round; a call cannot sit inside STLP, so this loop runs through pieces
+		JMP 29
+		IF
+			CLRS
+			JMP 28
+			JMP $CELL
+			PSHS
+			JMP 22
+			EQL TOPS
+			JMP 1
+			ADD
+			JMP $CELL
+			ADD 152
+			JMP 0
+			SUB $CELL
+			ADD 140
+		ELSE
+			JMP 1                   # return
+			JMP $CELL
+			CLRS
+			PSHS
+			SUB $CELL
+			JMP 1
+			SUB
+			JMP 0
+			EQL TOPS
+		ENDIF
+	ENDIF
+	JMP 0
+	IF EQL 152
+		CLRS
+		JMP 22
+		PSHS
+		JMP 28
+		JMP $CELL
+		EQL TOPS
+		CLRS
+		JMP 6
+		PSHS
+		JMP 28
+		ADD $STACK
+		JMP 29
+		SUB
+		JMP 0
+		SUB $CELL
+		ADD 151
+	ENDIF
+	JMP 0
+	IF EQL 160              # TANH, each of the n numbers from a, a step apart, becomes its tanh
+		CLRS                    # copies, so a and n stay as the caller left them
+		JMP 2
+		PSHS
+		JMP 28
+		EQL TOPS
+		CLRS
+		JMP 5
+		PSHS
+		JMP 29
+		EQL TOPS
+		JMP 0
+		SUB $CELL
+		ADD 161
+	ENDIF
+	JMP 0
+	IF EQL 161              # the same loop through pieces as EXP
+		JMP 29
+		IF
+			CLRS
+			JMP 28
+			JMP $CELL
+			PSHS
+			JMP 22
+			EQL TOPS
+			JMP 30
+			SUB $CELL
+			JMP 22
+			IF MORE 2147483647      # tanh(-x) = -tanh(x), so work with the size and put the sign back after
+				JMP 30
+				ADD
+				JMP 22
+				CLRS
+				PSHS
+				SUB $CELL
+				SUB $STACK
+			ENDIF
+			IF MORE 32768           # tanh(8) is 1 to four decimals, and the doubling below must not wrap
+				SUB $CELL
+				ADD 32768
+			ENDIF
+			ADD $CELL               # e^2x, since tanh(x) = 1 - 2 / (e^2x + 1)
+			JMP 1
+			ADD
+			JMP $CELL
+			ADD 162
+			JMP 0
+			SUB $CELL
+			ADD 140
+		ELSE
+			JMP 1                   # return
+			JMP $CELL
+			CLRS
+			PSHS
+			SUB $CELL
+			JMP 1
+			SUB
+			JMP 0
+			EQL TOPS
+		ENDIF
+	ENDIF
+	JMP 0
+	IF EQL 162
+		CLRS
+		JMP 10
+		PSHS
+		JMP 22
+		ADD $STACK
+		CLRS
+		PSHS
+		JMP 17
+		PSHS
+		DIVS
+		JMP 22
+		EQL TOPS
+		ADD $CELL
+		CLRS
+		PSHS
+		SUB $CELL
+		ADD 4096
+		SUB $STACK
+		JMP 30
+		IF
+			JMP 22
+			CLRS
+			PSHS
+			SUB $CELL
+			SUB $STACK
+		ENDIF
+
+		CLRS
+		JMP 22
+		PSHS
+		JMP 28
+		JMP $CELL
+		EQL TOPS
+		CLRS
+		JMP 6
+		PSHS
+		JMP 28
+		ADD $STACK
+		JMP 29
+		SUB
+		JMP 0
+		SUB $CELL
+		ADD 161
+	ENDIF

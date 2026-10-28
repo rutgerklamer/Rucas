@@ -1,0 +1,239 @@
+# Tests the base; it runs after base.ruc and closes the loop that base.ruc opens
+
+	JMP 0
+	IF EQL 1                # -1.5 * 0.75, a negative product, the one case DIVS cannot do by itself
+		JMP 2
+		SUB $CELL
+		SUB 6144
+		JMP 3
+		SUB $CELL
+		ADD 3072
+		JMP 1                   # a call; the note on the tape says to come back to piece 2
+		ADD
+		JMP $CELL
+		ADD 2
+		JMP 0
+		SUB $CELL
+		ADD 100
+	ENDIF
+	JMP 0
+	IF EQL 2                # a single number is a list of one, so PRNT can print c
+		JMP 2
+		SUB $CELL
+		ADD 4
+		JMP 5
+		SUB $CELL
+		ADD 1
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 3
+		JMP 0
+		SUB $CELL
+		ADD 120
+	ENDIF
+	JMP 0
+	IF EQL 3                # room for a matrix of 2 rows of 3
+		JMP 5
+		SUB $CELL
+		ADD 6
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 4
+		JMP 0
+		SUB $CELL
+		ADD 130
+	ENDIF
+	JMP 0
+	IF EQL 4                # rows (1.5, -2, 0.25) and (2, 0.5, -4), whose dot product is exactly 1.0 when DOT is right
+		CLRS
+		JMP 4
+		PSHS
+		JMP 48
+		EQL TOPS                # cell 48 keeps the matrix, since c changes with every call
+		JMP $CELL
+		ADD 6144
+		JMPR
+		SUB 8192
+		JMPR
+		ADD 1024
+		JMPR
+		ADD 8192
+		JMPR
+		ADD 2048
+		JMPR
+		SUB 16384
+		CLRS
+		JMP 48
+		PSHS
+		JMP 2
+		SUB $CELL
+		ADD $STACK
+		JMP 3
+		SUB $CELL
+		ADD $STACK
+		ADD 3
+		JMP 5
+		SUB $CELL
+		ADD 3
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 5
+		JMP 0
+		SUB $CELL
+		ADD 110
+	ENDIF
+	JMP 0
+	IF EQL 5
+		JMP 2
+		SUB $CELL
+		ADD 4
+		JMP 5
+		SUB $CELL
+		ADD 1
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 6
+		JMP 0
+		SUB $CELL
+		ADD 120
+	ENDIF
+	JMP 0
+	IF EQL 6                # columns (1.5, 2) and (-2, 0.5), read with steps of 3, give -2.0
+		CLRS
+		JMP 48
+		PSHS
+		JMP 2
+		SUB $CELL
+		ADD $STACK
+		JMP 3
+		SUB $CELL
+		ADD $STACK
+		ADD
+		JMP 5
+		SUB $CELL
+		ADD 2
+		JMP 6
+		ADD 2
+		JMPR
+		ADD 2
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 7
+		JMP 0
+		SUB $CELL
+		ADD 110
+	ENDIF
+	JMP 0
+	IF EQL 7                # steps back to 1, since they stay as a program sets them
+		JMP 6
+		SUB 2
+		JMPR
+		SUB 2
+		JMP 2
+		SUB $CELL
+		ADD 4
+		JMP 5
+		SUB $CELL
+		ADD 1
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 8
+		JMP 0
+		SUB $CELL
+		ADD 120
+	ENDIF
+	JMP 0
+	IF EQL 8                # room for a list of 4
+		JMP 5
+		SUB $CELL
+		ADD 4
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 9
+		JMP 0
+		SUB $CELL
+		ADD 130
+	ENDIF
+	JMP 0
+	IF EQL 9                # e to the power 0, 1, -1 and 2.5, which covers both signs and a number past ln 2
+		CLRS
+		JMP 4
+		PSHS
+		JMP 49
+		EQL TOPS
+		JMP $CELL
+		JMPR
+		ADD 4096
+		JMPR
+		SUB 4096
+		JMPR
+		ADD 10240
+		CLRS
+		JMP 49
+		PSHS
+		JMP 2
+		SUB $CELL
+		ADD $STACK
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 10
+		JMP 0
+		SUB $CELL
+		ADD 150
+	ENDIF
+	JMP 0
+	IF EQL 10               # a and n are still the list, since EXP leaves them as they were
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 11
+		JMP 0
+		SUB $CELL
+		ADD 120
+	ENDIF
+	JMP 0
+	IF EQL 11               # tanh of 0, 0.5, -1 and 3
+		JMP 49
+		JMP $CELL
+		SUB $CELL
+		JMPR
+		SUB $CELL
+		ADD 2048
+		JMPR
+		SUB $CELL
+		SUB 4096
+		JMPR
+		SUB $CELL
+		ADD 12288
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 12
+		JMP 0
+		SUB $CELL
+		ADD 160
+	ENDIF
+	JMP 0
+	IF EQL 12
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 13
+		JMP 0
+		SUB $CELL
+		ADD 120
+	ENDIF
+	JMP 0
+	IF EQL 13
+		SUB $CELL               # piece 0 ends the loop, and with it the program
+	ENDIF
+	JMP 0
+NDLP
