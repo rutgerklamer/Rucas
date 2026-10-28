@@ -1,5 +1,5 @@
 // Runs a Rucas program; straight runs are worked out once as blocks, code outside any loop runs as it is read.
-//   rucas <file.ruc> [input file]
+//   rucas <file.ruc> [more .ruc files] [input file]
 #include <vector>
 #include <iostream>
 #include <cstdio>
@@ -30,6 +30,7 @@ struct Instruction
 	Arg arg;
 	uint32_t n;
 	int line;
+	int file;
 	int match;
 	int from, to;
 	long long move;
@@ -65,6 +66,8 @@ int m_lazy_height = EMPTY;
 uint32_t m_lazy_value = 0;
 FILE* m_input = stdin;
 bool m_started = false;
+std::vector<std::string> m_files;
+int m_file = 0;
 
 // the program is read in pieces; code outside any loop runs once, so it runs as it is read and is dropped
 const size_t PIECE = 1 << 20;
@@ -78,7 +81,7 @@ struct Reader
 	int line;
 };
 
-bool runFile(const char* path, bool execute);
+bool runFiles(bool execute);
 bool readLine(Reader& r, std::string& text);
 int parseLine(const std::string& text, int line, Instruction& ins);
 bool checkOrder(const Instruction& ins, std::vector<Instruction>& open);
@@ -95,11 +98,24 @@ void movePointer(long long n);
 void materialize();
 uint32_t stackTop(size_t depth);
 void fail(const Instruction& ins, const std::string& message);
+std::string where(int file, int line);
 
 int main(int argc, char const *argv[])
 {
-	if (argc < 2 || argc > 3) {
-		std::cerr << "usage: rucas <file.ruc> [input file]" << std::endl;
+	// the first file always counts as the program, so every command line from before still works
+	const char* input = nullptr;
+	bool usable = argc >= 2;
+	for (int i = 1; i < argc && usable; i++) {
+		std::string arg = argv[i];
+		if (i == 1 || (arg.size() > 4 && arg.compare(arg.size() - 4, 4, ".ruc") == 0))
+			m_files.push_back(arg);
+		else if (i == argc - 1)
+			input = argv[i];
+		else
+			usable = false;
+	}
+	if (!usable) {
+		std::cerr << "usage: rucas <file.ruc> [more .ruc files] [input file]" << std::endl;
 		return 1;
 	}
 #ifdef _WIN32
@@ -107,51 +123,54 @@ int main(int argc, char const *argv[])
 	_setmode(_fileno(stdin), _O_BINARY);
 	_setmode(_fileno(stdout), _O_BINARY);
 #endif
-	if (argc == 3) {
-		m_input = std::fopen(argv[2], "rb");
+	if (input) {
+		m_input = std::fopen(input, "rb");
 		if (!m_input) {
-			std::cerr << "error: cannot open " << argv[2] << std::endl;
+			std::cerr << "error: cannot open " << input << std::endl;
 			return 1;
 		}
 	}
-	// the whole file is checked before any of it runs
-	if (!runFile(argv[1], false))
+	// checked in full first, since code outside loops runs while it is read
+	if (!runFiles(false))
 		return 1;
-	if (!runFile(argv[1], true))
+	if (!runFiles(true))
 		return 1;
 	std::cout << std::flush;
 	return 0;
 }
 
-bool runFile(const char* path, bool execute)
+// read as one program, so a loop can open in a base file and close in the program's own file
+bool runFiles(bool execute)
 {
-	Reader r = {std::fopen(path, "rb"), std::vector<char>(PIECE), 0, 0, 0};
-	if (!r.file) {
-		std::cerr << "error: cannot open " << path << std::endl;
-		return false;
-	}
 	std::vector<Instruction> open;
 	std::string text;
 	Instruction ins;
 	m_started = false;
 	bool going = true;
-	while (going && readLine(r, text)) {
-		int got = parseLine(text, r.line, ins);
-		if (got < 0 || (got > 0 && !checkOrder(ins, open)))
+	for (m_file = 0; going && m_file < (int)m_files.size(); m_file++) {
+		Reader r = {std::fopen(m_files[m_file].c_str(), "rb"), std::vector<char>(PIECE), 0, 0, 0};
+		if (!r.file) {
+			std::cerr << "error: cannot open " << m_files[m_file] << std::endl;
 			return false;
-		if (got == 0 || !execute)
-			continue;
-		m_program.push_back(ins);
-		if (open.empty() && m_program.size() >= SEGMENT)
-			going = runSegment();
+		}
+		while (going && readLine(r, text)) {
+			int got = parseLine(text, r.line, ins);
+			if (got < 0 || (got > 0 && !checkOrder(ins, open)))
+				return false;
+			if (got == 0 || !execute)
+				continue;
+			m_program.push_back(ins);
+			if (open.empty() && m_program.size() >= SEGMENT)
+				going = runSegment();
+		}
+		std::fclose(r.file);
 	}
 	if (going && !open.empty()) {
-		std::cerr << "error: line " << open.back().line << ": " << OP_NAMES[open.back().op] << " is never closed" << std::endl;
+		std::cerr << "error: " << where(open.back().file, open.back().line) << ": " << OP_NAMES[open.back().op] << " is never closed" << std::endl;
 		return false;
 	}
 	if (going && execute)
 		runSegment();
-	std::fclose(r.file);
 	return true;
 }
 
@@ -207,19 +226,19 @@ int parseLine(const std::string& text, int line, Instruction& ins)
 	}
 	word(extra);
 	if (!extra.empty()) {
-		std::cerr << "error: line " << line << ": unexpected '" << extra << "'" << std::endl;
+		std::cerr << "error: " << where(m_file, line) << ": unexpected '" << extra << "'" << std::endl;
 		return -1;
 	}
 
 	// BITS sets up the machine, so it comes before the first instruction
 	if (op == "BITS") {
 		if (m_started) {
-			std::cerr << "error: line " << line << ": BITS must come before the first instruction" << std::endl;
+			std::cerr << "error: " << where(m_file, line) << ": BITS must come before the first instruction" << std::endl;
 			return -1;
 		}
 		Instruction value;
 		if (!parseArg(arg, value) || value.arg != NUMBER || (value.n != 8 && value.n != 16 && value.n != 32)) {
-			std::cerr << "error: line " << line << ": BITS takes 8, 16 or 32" << std::endl;
+			std::cerr << "error: " << where(m_file, line) << ": BITS takes 8, 16 or 32" << std::endl;
 			return -1;
 		}
 		m_bits = (int)value.n;
@@ -228,17 +247,18 @@ int parseLine(const std::string& text, int line, Instruction& ins)
 	}
 
 	ins.line = line;
+	ins.file = m_file;
 	ins.match = -1;
 	int k = 0;
 	while (k < OP_COUNT && op != OP_NAMES[k])
 		k++;
 	if (k == OP_COUNT) {
-		std::cerr << "error: line " << line << ": unknown instruction '" << op << "'" << std::endl;
+		std::cerr << "error: " << where(m_file, line) << ": unknown instruction '" << op << "'" << std::endl;
 		return -1;
 	}
 	ins.op = (Op)k;
 	if (!parseArg(arg, ins)) {
-		std::cerr << "error: line " << line << ": '" << arg << "' is not a valid argument (expected N, $CELL or $STACK)" << std::endl;
+		std::cerr << "error: " << where(m_file, line) << ": '" << arg << "' is not a valid argument (expected N, $CELL or $STACK)" << std::endl;
 		return -1;
 	}
 	m_started = true;
@@ -249,7 +269,7 @@ bool checkOrder(const Instruction& ins, std::vector<Instruction>& open)
 {
 	Op op = ins.op;
 	if ((op == JMP || op == IF_EQL || op == IF_LESS || op == IF_MORE) && ins.arg == NONE) {
-		std::cerr << "error: line " << ins.line << ": " << OP_NAMES[op] << (op == JMP ? " needs a cell number" : " needs a value to compare with") << std::endl;
+		std::cerr << "error: " << where(ins.file, ins.line) << ": " << OP_NAMES[op] << (op == JMP ? " needs a cell number" : " needs a value to compare with") << std::endl;
 		return false;
 	}
 	// an ELSE takes the place of its IF, so a second ELSE or an NDLP finds no IF to belong to
@@ -258,7 +278,7 @@ bool checkOrder(const Instruction& ins, std::vector<Instruction>& open)
 		open.push_back(ins);
 	else if (op == ELSE) {
 		if (!in_if || open.back().op == ELSE) {
-			std::cerr << "error: line " << ins.line << ": ELSE without matching IF" << std::endl;
+			std::cerr << "error: " << where(ins.file, ins.line) << ": ELSE without matching IF" << std::endl;
 			return false;
 		}
 		open.back() = ins;
@@ -266,7 +286,7 @@ bool checkOrder(const Instruction& ins, std::vector<Instruction>& open)
 	else if (op == NDLP || op == ENDIF) {
 		bool loop = (op == NDLP);
 		if (open.empty() || in_if == loop) {
-			std::cerr << "error: line " << ins.line << ": " << OP_NAMES[op] << " without matching " << (loop ? "STLP" : "IF") << std::endl;
+			std::cerr << "error: " << where(ins.file, ins.line) << ": " << OP_NAMES[op] << " without matching " << (loop ? "STLP" : "IF") << std::endl;
 			return false;
 		}
 		open.pop_back();
@@ -640,6 +660,12 @@ uint32_t stackTop(size_t depth)
 void fail(const Instruction& ins, const std::string& message)
 {
 	std::cout << std::flush;
-	std::cerr << "\nerror: line " << ins.line << ": " << message << std::endl;
+	std::cerr << "\nerror: " << where(ins.file, ins.line) << ": " << message << std::endl;
 	std::exit(1);
+}
+
+// with several files a line number alone no longer says where, so the file is named too
+std::string where(int file, int line)
+{
+	return (m_files.size() > 1 ? m_files[file] + " " : "") + "line " + std::to_string(line);
 }
