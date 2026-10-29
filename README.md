@@ -2,7 +2,7 @@
 
 Rucas is a small esoteric programming language in the spirit of Brainfuck, but with readable assembly-style mnemonics. A program works on a tape of 30,000 byte-sized cells and a stack, and it has loops, `IF` blocks and console I/O.
 
-Written in 2018. In 2026 it learned to multiply, divide and choose, and runs a small language model written in it by hand.
+Written in 2018. In 2026 it learned to multiply, divide and choose, and runs language models written in it by hand, a small neural network among them.
 
 ```
 ADD 72
@@ -15,7 +15,7 @@ PRNTA
 | ---- | ---------- |
 | [rucas.cpp](rucas.cpp) | The interpreter. A single C++ file with no dependencies. |
 | [samples](samples) | Example programs from 2018. They run unchanged on `rucas.cpp`. |
-| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. [lm_base](showcase/lm_base) is a base of functions for bigger models. |
+| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. [lm_base](showcase/lm_base) is a base of functions for bigger models, and [names_network](showcase/names_network) a neural network built on it. |
 | [code_patterns](code_patterns) | Small programs that show the moves Rucas programs are built from, and why they work. |
 | [main.cpp](main.cpp) | The original 2018 interpreter, kept as it was. It is Windows-only and has the bugs that `rucas.cpp` fixes. |
 | [main.ruc](main.ruc) | The original 2018 scratch program. It contains two typos (`JMPRT` and `PRNT`) that the old interpreter silently accepted; `rucas.cpp` points them out. |
@@ -227,13 +227,19 @@ To write other names, change the seed on the line `ADD 2018`, or give it a list 
 | Piece | Function | What it does |
 | ----- | -------- | ------------ |
 | 100 | FMUL | c = a × b |
-| 110 | DOT | c = the dot product of n numbers from a and n numbers from b |
+| 110 | MATVEC | Line j of the matrix at a times the list at b goes to place j of the list at c |
 | 120 | PRNT | Prints n numbers from a, one per line with four decimals |
 | 130 | ALLOC | c = the first of n fresh cells |
 | 150 | EXP | Turns each of n numbers from a into e to its power |
 | 160 | TANH | Turns each of n numbers from a into its tanh |
+| 165 | DTANH | Multiplies each of n numbers from a by 1 − b[i]², the slope of tanh |
+| 170 | RAND | Fills n numbers from a with random numbers from b up to b + c |
+| 180 | COPY | Copies n numbers from a to b |
+| 190 | STEP | A learning step; weight i of line j in the matrix at c loses a[j] × b[i] ÷ cell 9 |
+| 200 | SOFTMAX | Turns n numbers from a into chances that add up to 1.0 |
+| 210 | LOG | Turns each of n numbers from a into its natural log |
 
-Numbers are signed, with 12 bits after the point, so 1.0 is 4096. A list is n numbers starting at a cell, a step apart; the step for a is in cell 6 and the step for b in cell 7, both 1 to start, so a step of the row length reads a column. Arguments go in cells 2 (a), 3 (b) and 5 (n), and the result comes back in cell 4 (c). A function leaves a, b, n and the steps as they were. Cells 48 to 63 are the program's own, and ALLOC hands out cells from 64. A call to FMUL that comes back to piece 2;
+Numbers are signed, with 12 bits after the point, so 1.0 is 4096. A list is n numbers starting at a cell, a step apart; the step for a is in cell 6 and the step for b in cell 7, both 1 to start. A matrix is lines of n numbers, with cell 18 saying how many lines and cell 19 how far apart they start, so the same MATVEC reads rows or columns. Arguments go in cells 2 (a), 3 (b), 4 (c) and 5 (n), and a single result comes back in c. STEP divides by cell 9, which starts at 4096; 4096 ÷ rate makes it a learning step of that rate. RAND keeps its state in cell 31, starting at 2018, so every run comes out the same. Cells 48 to 95 are the program's own, and ALLOC hands out cells from 96. A call to FMUL that comes back to piece 2;
 
 ```
 JMP 1
@@ -245,24 +251,35 @@ SUB $CELL
 ADD 100
 ```
 
-[test.ruc](showcase/lm_base/test.ruc) calls every function. It reads a matrix by its rows and by its columns, then takes e to the power 0, 1, −1 and 2.5, and the tanh of 0, 0.5, −1 and 3.
+[test.ruc](showcase/lm_base/test.ruc) calls every function and prints what each one gives.
 
 ```bash
 ./rucas showcase/lm_base/base.ruc showcase/lm_base/test.ruc
 ```
 
+### A network that learns names
+
+[names_network.ruc](showcase/names_network/names_network.ruc) is a small neural network on top of lm_base. It learns from the same names which symbol comes after the 3 before it. Each of the 3 gets 8 learned numbers, its embedding; the 24 of them feed 32 tanh neurons, and those give a score for every symbol, which SOFTMAX turns into chances. That makes 1,907 weights. It learns one example at a time, from random places in the names, for 10 passes of 9,630 examples, and then writes 20 names. It takes about a minute and a half.
+
+```bash
+./rucas showcase/lm_base/base.ruc showcase/names_network/names_network.ruc showcase/names/names.txt
 ```
--1.1250
-1.0000
--2.0000
-1.0000
-2.7182
-0.3676
-12.1816
-0.0000
-0.4624
--0.7617
-0.9951
+
+It prints the average loss of every pass, then the names. The loss says how surprised the network is by the right symbol; the counts in names.ruc come to 2.35.
+
+```
+2.4938
+2.4106
+...
+2.1296
+bra
+lebynn
+rulah
+ertey
+ila
+andel
+haelani
+cadeline
 ```
 
 ### Samples
