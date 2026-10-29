@@ -1,0 +1,115 @@
+# Numbers; the order on the stack, numbers below 0, numbers with a point, and random numbers
+
+BITS 32                 # room for the numbers below, which do not fit in 8 bits
+
+JMP 9
+ADD 10
+JMP 1
+ADD 7
+JMP 2
+ADD 2
+
+CLRS                    # 7 / 2; DIVS divides the top by the value under it, so the 2 goes on first
+JMP 2
+PSHS
+JMP 1
+PSHS
+DIVS
+JMP 3
+EQL TOPS
+PRNTD
+JMP 9
+PRNTA
+
+CLRS                    # 2 - 7; a cell wraps it to 4294967291, so anything above 2147483647 counts as below 0
+JMP 1
+PSHS
+JMP 2
+PSHS
+SUBS
+JMP 3
+EQL TOPS
+IF MORE 2147483647      # PRNTD knows no minus, so print one and then the size
+	JMP 4
+	ADD 45
+	PRNTA
+	JMP 3
+	CLRS
+	PSHS
+	SUB $CELL
+	SUB $STACK
+ENDIF
+PRNTD
+JMP 9
+PRNTA
+
+JMP 5                   # 1.5 * 0.75, with every number stored times 4096 since cells hold whole numbers only
+ADD 6144
+JMP 6
+ADD 3072
+JMP 7
+ADD 4096
+CLRS
+JMP 5
+PSHS
+JMP 6
+PSHS
+MULS
+JMP 3
+EQL TOPS
+CLRS                    # the product is 4096 times too big, so divide once
+JMP 7
+PSHS
+JMP 3
+PSHS
+DIVS
+EQL TOPS
+PRNTD                   # 4608, which is 1.125 times 4096
+JMP 9
+PRNTA
+
+JMP 10                  # random numbers; state * 1103515245 + 12345 visits all 2^32 values before it repeats
+ADD 2018
+JMP 11
+ADD 1103515245
+JMP 12
+ADD 12345
+JMP 13
+ADD 65536
+JMP 14
+ADD 100
+JMP 15
+ADD 3
+STLP                    # three of them, each below 100
+	CLRS
+	JMP 11
+	PSHS
+	JMP 10
+	PSHS
+	MULS
+	JMP 12
+	PSHS
+	ADDS
+	JMP 10
+	EQL TOPS
+	CLRS                    # the low bits of this generator repeat quickly, so use the top 16
+	JMP 13
+	PSHS
+	JMP 10
+	PSHS
+	DIVS
+	JMP 16
+	EQL TOPS
+	CLRS
+	JMP 14
+	PSHS
+	JMP 16
+	PSHS
+	MODS
+	EQL TOPS
+	PRNTD
+	JMP 9
+	PRNTA
+	JMP 15
+	SUB
+NDLP

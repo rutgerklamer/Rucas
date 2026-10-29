@@ -1,0 +1,95 @@
+# A function that calls itself; FACT(n) = n * FACT(n - 1), and FACT(0) = 1
+
+BITS 32
+
+JMP 1
+ADD 100                 # the tape stack from cell 101 holds return notes and the n of every call still waiting
+JMP 3
+ADD 10
+JMP 0
+ADD 1
+
+STLP
+	JMP 0
+	IF EQL 1                # FACT(5)
+		JMP 4
+		ADD 5
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 2
+		JMP 0
+		SUB $CELL
+		ADD 50
+	ENDIF
+	JMP 0
+	IF EQL 2
+		JMP 2
+		PRNTD
+		JMP 3
+		PRNTA
+		JMP 0
+		SUB $CELL
+	ENDIF
+	JMP 0
+	IF EQL 50               # FACT, x = n!
+		JMP 4
+		IF
+			JMP 1                   # the call below changes n, so n waits on the tape stack, under the return note
+			ADD
+			CLRS
+			JMP 4
+			PSHS
+			JMP 1
+			JMP $CELL
+			EQL TOPS
+			JMP 1
+			ADD
+			JMP $CELL
+			ADD 51
+			JMP 4
+			SUB                     # cell 0 still says 50, so the next round runs FACT again on n - 1
+		ELSE
+			JMP 2
+			SUB $CELL
+			ADD
+			JMP 1
+			JMP $CELL
+			CLRS
+			PSHS
+			SUB $CELL
+			JMP 1
+			SUB
+			JMP 0
+			EQL TOPS
+		ENDIF
+	ENDIF
+	JMP 0
+	IF EQL 51               # back from FACT(n - 1), with x = (n - 1)!
+		JMP 1
+		JMP $CELL
+		CLRS
+		PSHS
+		SUB $CELL
+		JMP 1
+		SUB
+		JMP 4
+		EQL TOPS                # this call's own n, off the tape again
+		CLRS
+		PSHS
+		JMP 2
+		PSHS
+		MULS
+		EQL TOPS
+		JMP 1
+		JMP $CELL
+		CLRS
+		PSHS
+		SUB $CELL
+		JMP 1
+		SUB
+		JMP 0
+		EQL TOPS
+	ENDIF
+	JMP 0
+NDLP

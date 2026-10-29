@@ -1,0 +1,56 @@
+# Loops; repeating a set number of times, walking until a 0, and leaving a loop from inside
+
+JMP 9
+ADD 10
+JMP 8
+ADD 42                  # a star
+
+JMP 1                   # three stars; STLP and NDLP both stand on the counter, so the loop runs until it reaches 0
+ADD 3
+STLP
+	JMP 8
+	PRNTA
+	JMP 1
+	SUB
+NDLP
+JMP 9
+PRNTA
+
+JMP 20                  # the word hi at cells 20 and 21, with cell 22 left at 0 to mark its end
+ADD 104
+JMPR
+ADD 105
+JMP 20
+STLP                    # print until the 0; NDLP looks at the cell the pointer has moved on to, not the one it started on
+	PRNTA
+	JMPR
+NDLP
+JMP 9
+PRNTA
+
+JMP 40                  # the place of the first number above 50 in 12, 30, 77, 5
+ADD 12
+JMPR
+ADD 30
+JMPR
+ADD 77
+JMPR
+ADD 5
+JMP 9
+STLP                    # cell 9 is not 0, so the loop always starts; the place counts up in cell 6
+	CLRS
+	JMP 6
+	PSHS
+	JMP 40
+	JMPR $STACK
+	IF MORE 50              # found; stepping onto cell 7, which stays 0, makes NDLP end the loop
+		JMP 7
+	ELSE
+		JMP 6                   # the next place, never 0 once counted up, so NDLP goes round again
+		ADD
+	ENDIF
+NDLP
+JMP 6
+PRNTD
+JMP 9
+PRNTA

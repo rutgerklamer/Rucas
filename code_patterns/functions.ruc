@@ -1,0 +1,71 @@
+# Functions without jumps; one loop runs the piece whose number is in cell 0
+
+BITS 32
+
+JMP 1
+ADD 100                 # return notes go on the tape from cell 101, since CLRS wipes the stack before every sum
+JMP 3
+ADD 10
+JMP 0
+ADD 1
+
+STLP                    # Rucas cannot jump to a line, so every piece sits in one loop and waits for its number
+	JMP 0                   # IF EQL looks at the current cell, so every piece starts back on cell 0
+	IF EQL 1                # SQUARE gets called from two pieces, and each call comes back to where it was made
+		JMP 2
+		ADD 3
+		JMP 1                   # the call; SQUARE cannot know who called it, so a note on the tape says where to come back to
+		ADD
+		JMP $CELL
+		ADD 2
+		JMP 0
+		SUB $CELL
+		ADD 50
+	ENDIF
+	JMP 0
+	IF EQL 2
+		JMP 2
+		PRNTD
+		JMP 3
+		PRNTA
+		JMP 2
+		SUB $CELL
+		ADD 5
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 3
+		JMP 0
+		SUB $CELL
+		ADD 50
+	ENDIF
+	JMP 0
+	IF EQL 3
+		JMP 2
+		PRNTD
+		JMP 3
+		PRNTA
+		JMP 0
+		SUB $CELL               # piece 0 ends the loop, and with it the program
+	ENDIF
+	JMP 0
+	IF EQL 50               # SQUARE, x = x * x
+		CLRS
+		JMP 2
+		PSHS
+		PSHS
+		MULS
+		EQL TOPS
+
+		JMP 1                   # return; the note comes off the tape again, so calls can sit inside calls
+		JMP $CELL
+		CLRS
+		PSHS
+		SUB $CELL
+		JMP 1
+		SUB
+		JMP 0
+		EQL TOPS
+	ENDIF
+	JMP 0
+NDLP

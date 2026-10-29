@@ -1,0 +1,49 @@
+# Pointers; a cell that holds the number of another cell
+
+JMP 50                  # the words one, two and six, at cells 50, 60 and 70
+ADD 111
+JMPR
+ADD 110
+JMPR
+ADD 101
+JMP 60
+ADD 116
+JMPR
+ADD 119
+JMPR
+ADD 111
+JMP 70
+ADD 115
+JMPR
+ADD 105
+JMPR
+ADD 120
+JMP 1                   # cells 1 to 3 point at the words, so a word can be picked by its number
+ADD 50
+JMPR
+ADD 60
+JMPR
+ADD 70
+JMP 9
+ADD 10
+JMP 8
+ADD 2                   # pick word 2
+
+JMP 8                   # follow two pointers; cell 8 names cell 2, and cell 2 names the word
+JMP $CELL
+JMP $CELL
+PRNTA 3
+JMP 9
+PRNTA
+
+JMP 7                   # letter 1 of that word, counting from 0; JMPR $STACK moves by a number known only while running
+ADD 1
+CLRS
+PSHS
+JMP 8
+JMP $CELL
+JMP $CELL
+JMPR $STACK
+PRNTA
+JMP 9
+PRNTA

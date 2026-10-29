@@ -1,0 +1,66 @@
+# Small moves on single cells, which almost every Rucas program needs
+
+JMP 9
+ADD 10                  # a line break, to print after every result
+JMP 1
+ADD 7
+
+CLRS                    # copy cell 1 into cell 2; a cell cannot be moved directly, so it goes by way of the stack
+JMP 1
+PSHS
+JMP 2
+EQL TOPS
+PRNTD
+JMP 9
+PRNTA
+
+CLRS                    # add cell 1 to cell 2; ADD $STACK adds where EQL TOPS replaces
+JMP 1
+PSHS
+JMP 2
+ADD $STACK
+PRNTD
+JMP 9
+PRNTA
+
+JMP 2                   # double cell 2; adding a cell to itself needs no stack at all
+ADD $CELL
+PRNTD
+JMP 9
+PRNTA
+
+JMP 2                   # negate cell 2; SUB $CELL makes 0, and taking the pushed value off 0 leaves minus it
+CLRS
+PSHS
+SUB $CELL
+SUB $STACK
+PRNTD                   # 228, which is -28 in a cell of 8 bits
+JMP 9
+PRNTA
+
+JMP 2                   # empty cell 2; whatever a cell holds, taking it off itself leaves 0
+SUB $CELL
+PRNTD
+JMP 9
+PRNTA
+
+JMP 2
+ADD 3
+CLRS                    # swap cells 1 and 2; ADDS then SUBS brings the value under the top back up, since SUBS gives top minus second
+JMP 2
+PSHS
+JMP 1
+PSHS
+JMP 2
+EQL TOPS
+ADDS
+SUBS
+JMP 1
+EQL TOPS
+PRNTD
+JMP 9
+PRNTA
+JMP 2
+PRNTD
+JMP 9
+PRNTA
