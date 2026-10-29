@@ -1,4 +1,4 @@
-// Runs a Rucas program; straight runs are worked out once as blocks, code outside any loop runs as it is read.
+// Runs a Rucas program, one instruction at a time; code outside any loop runs as it is read.
 //   rucas <file.ruc> [more .ruc files] [input file]
 #include <vector>
 #include <iostream>
@@ -16,13 +16,10 @@
 enum Op
 {
 	ADD, SUB, JMPR, JMPL, JMP, PRNTA, PRNTD, CINP, STLP, NDLP, IF, IF_EQL, ENDIF, HALT,
-	PSHS, CLRS, RMVS, EQL_TOPS, ADDS, SUBS, MULS, DIVS, MODS, ELSE, IF_LESS, IF_MORE, BLOCK, BLOCK_ONCE
+	PSHS, CLRS, RMVS, EQL_TOPS, ADDS, SUBS, MULS, DIVS, MODS, ELSE, IF_LESS, IF_MORE
 };
 
 enum Arg { NONE, NUMBER, CELL, STACK };
-
-// what a BLOCK leaves on the stack; nothing changed, empty, or a ladder x, x, 2x, 3x, 5x... of this height
-const int UNTOUCHED = -2, EMPTY = -1;
 
 struct Instruction
 {
@@ -32,19 +29,6 @@ struct Instruction
 	int line;
 	int file;
 	int match;
-	int from, to;
-	long long move;
-	int ladder;
-};
-
-// one step of a BLOCK, on the cell at off (0 to TAPE_SIZE - 1) from where the block starts; v is the value PSHS took
-enum ActionKind { A_ADD, A_MULADD, A_SET, A_DOUBLE, A_SETV, A_TAKE };
-
-struct Action
-{
-	ActionKind kind;
-	long long off;
-	uint32_t k;
 };
 
 const char* const OP_NAMES[] = {
@@ -59,11 +43,7 @@ const long long TAPE_SIZE = 30000;
 std::vector<uint32_t> m_cells(TAPE_SIZE);
 std::vector<uint32_t> m_stack;
 std::vector<Instruction> m_program;
-std::vector<Action> m_actions;
-std::vector<uint32_t> m_ladder = {1, 1};
 long long m_cell = 0;
-int m_lazy_height = EMPTY;
-uint32_t m_lazy_value = 0;
 FILE* m_input = stdin;
 bool m_started = false;
 std::vector<std::string> m_files;
@@ -87,15 +67,10 @@ int parseLine(const std::string& text, int line, Instruction& ins);
 bool checkOrder(const Instruction& ins, std::vector<Instruction>& open);
 bool runSegment();
 bool parseArg(const std::string& text, Instruction& ins);
-void fuseBlocks();
-bool endsAtZero(const Instruction& block);
-bool addToBlock(const Instruction& ins, Instruction& block, int& state);
-void addAction(const Instruction& block, ActionKind kind, long long off, uint32_t k);
 void matchBlocks();
 bool runCode();
 uint32_t getValue(const Instruction& ins);
 void movePointer(long long n);
-void materialize();
 uint32_t stackTop(size_t depth);
 void fail(const Instruction& ins, const std::string& message);
 std::string where(int file, int line);
@@ -297,11 +272,9 @@ bool checkOrder(const Instruction& ins, std::vector<Instruction>& open)
 // false once the program has stopped at HALT
 bool runSegment()
 {
-	fuseBlocks();
 	matchBlocks();
 	bool going = runCode();
 	m_program.clear();
-	m_actions.clear();
 	return going;
 }
 
@@ -330,132 +303,6 @@ bool parseArg(const std::string& text, Instruction& ins)
 		ins.n = (uint32_t)value;
 	}
 	return true;
-}
-
-// runs of moves, adds and stack steps become one BLOCK, worked out once here instead of on every pass
-void fuseBlocks()
-{
-	std::vector<Instruction> fused;
-	size_t i = 0;
-	while (i < m_program.size()) {
-		Instruction block = m_program[i];
-		block.op = BLOCK;
-		block.from = (int)m_actions.size();
-		block.move = 0;
-		int state = UNTOUCHED;
-		size_t j = i;
-		while (j < m_program.size() && addToBlock(m_program[j], block, state))
-			j++;
-		if (j - i >= 2) {
-			block.to = (int)m_actions.size();
-			block.ladder = state;
-			fused.push_back(block);
-			i = j;
-		}
-		else {
-			m_actions.resize(block.from);
-			fused.push_back(m_program[i]);
-			i++;
-		}
-	}
-
-	// STLP, a block that ends with its own cell at 0, NDLP; runs at most once, so it is one BLOCK_ONCE
-	m_program.clear();
-	for (size_t k = 0; k < fused.size(); k++) {
-		if (fused[k].op == STLP && k + 2 < fused.size() && fused[k + 1].op == BLOCK && fused[k + 2].op == NDLP && endsAtZero(fused[k + 1])) {
-			fused[k + 1].op = BLOCK_ONCE;
-			k++;
-			m_program.push_back(fused[k]);
-			k++;
-		}
-		else
-			m_program.push_back(fused[k]);
-	}
-}
-
-bool endsAtZero(const Instruction& block)
-{
-	if (block.move % TAPE_SIZE != 0)
-		return false;
-	for (int a = block.to - 1; a >= block.from; a--)
-		if (m_actions[a].off == 0)
-			return (m_actions[a].kind == A_SET || m_actions[a].kind == A_TAKE) && m_actions[a].k == 0;
-	return false;
-}
-
-bool addToBlock(const Instruction& ins, Instruction& block, int& state)
-{
-	long long& at = block.move;
-	bool fixed = (ins.arg == NONE || ins.arg == NUMBER);
-	switch (ins.op) {
-	case JMPR:
-	case JMPL:
-		if (!fixed)
-			return false;
-		at += (ins.op == JMPR ? 1 : -1) * (long long)ins.n;
-		return true;
-	case ADD:
-	case SUB: {
-		bool add = (ins.op == ADD);
-		if (fixed)
-			addAction(block, A_ADD, at, add ? ins.n : 0u - ins.n);
-		else if (ins.arg == CELL)
-			addAction(block, add ? A_DOUBLE : A_SET, at, 0);
-		else if (state >= 0)
-			addAction(block, A_MULADD, at, add ? m_ladder[state] : 0u - m_ladder[state]);
-		else if (state != EMPTY)
-			return false;
-		return true;
-	}
-	case CLRS:
-		state = EMPTY;
-		return true;
-	case PSHS:
-		if (state != EMPTY)
-			return false;
-		addAction(block, A_SETV, at, 0);
-		state = 0;
-		return true;
-	case ADDS:
-		if (state < 0)
-			return false;
-		state++;
-		while ((int)m_ladder.size() <= state)
-			m_ladder.push_back(m_ladder[m_ladder.size() - 1] + m_ladder[m_ladder.size() - 2]);
-		return true;
-	case EQL_TOPS:
-		if (state == UNTOUCHED)
-			return false;
-		addAction(block, A_SET, at, state >= 0 ? m_ladder[state] : 0);
-		return true;
-	default:
-		return false;
-	}
-}
-
-void addAction(const Instruction& block, ActionKind kind, long long off, uint32_t k)
-{
-	off = (off % TAPE_SIZE + TAPE_SIZE) % TAPE_SIZE;
-	if (kind == A_SET && k == 0 && (int)m_actions.size() > block.from && m_actions.back().kind == A_SETV && m_actions.back().off == off) {
-		m_actions.back().kind = A_TAKE;
-		return;
-	}
-	// an add joins an earlier add to the same cell when nothing in between touches that cell (or v)
-	if (kind == A_ADD || kind == A_MULADD) {
-		for (int a = (int)m_actions.size() - 1; a >= block.from && a >= (int)m_actions.size() - 64; a--) {
-			Action& earlier = m_actions[a];
-			if (kind == A_MULADD && (earlier.kind == A_SETV || earlier.kind == A_TAKE))
-				break;
-			if (earlier.off != off)
-				continue;
-			if (earlier.kind == kind) {
-				earlier.k += k;
-				return;
-			}
-			break;
-		}
-	}
-	m_actions.push_back({kind, off, k});
 }
 
 // a segment holds whole loops and IF blocks only (checkOrder has seen them), so every end has its start
@@ -555,46 +402,13 @@ bool runCode()
 			break;
 		case ENDIF:
 			break;
-		case BLOCK_ONCE:
-			if (cell == 0)
-				break;
-			// fall through
-		case BLOCK: {
-			const Action* const actions = m_actions.data();
-			uint32_t v = 0;
-			for (int a = ins.from; a < ins.to; a++) {
-				const Action& act = actions[a];
-				long long at = m_cell + act.off;
-				if (at >= TAPE_SIZE)
-					at -= TAPE_SIZE;
-				uint32_t& c = tape[at];
-				switch (act.kind) {
-				case A_ADD: c = (c + act.k) & mask; break;
-				case A_MULADD: c = (c + act.k * v) & mask; break;
-				case A_SET: c = (act.k * v) & mask; break;
-				case A_DOUBLE: c = (c + c) & mask; break;
-				case A_SETV: v = c; break;
-				case A_TAKE: v = c; c = 0; break;
-				}
-			}
-			movePointer(ins.move);
-			if (ins.ladder != UNTOUCHED) {
-				m_stack.clear();
-				m_lazy_height = ins.ladder;
-				m_lazy_value = v;
-			}
-			break;
-		}
 		case PSHS:
-			materialize();
 			m_stack.push_back(cell);
 			break;
 		case CLRS:
 			m_stack.clear();
-			m_lazy_height = EMPTY;
 			break;
 		case RMVS:
-			materialize();
 			if (!m_stack.empty())
 				m_stack.erase(m_stack.begin());
 			break;
@@ -641,17 +455,8 @@ void movePointer(long long n)
 		m_cell = (m_cell % TAPE_SIZE + TAPE_SIZE) % TAPE_SIZE;
 }
 
-// a BLOCK leaves its ladder unwritten; it is pushed only when something reads the stack
-void materialize()
-{
-	for (int j = 0; j <= m_lazy_height; j++)
-		m_stack.push_back((m_ladder[j] * m_lazy_value) & m_mask);
-	m_lazy_height = EMPTY;
-}
-
 uint32_t stackTop(size_t depth)
 {
-	materialize();
 	if (m_stack.size() <= depth)
 		return 0;
 	return m_stack[m_stack.size() - 1 - depth];
