@@ -10,9 +10,9 @@ The moves that Rucas programs are built from, each in a small program that runs 
 | ------- | ----- | ------ |
 | [cells.ruc](cells.ruc) | Copying, adding, doubling, negating, emptying and swapping cells | 7, 14, 28, 228, 0, 3 and 7 |
 | [pointers.ruc](pointers.ruc) | Following pointers, and moving by a number known only while running | two and w |
-| [numbers.ruc](numbers.ruc) | The order on the stack, numbers below 0, numbers with a point, random numbers | 3, -5, 4608, 54, 61 and 49 |
-| [loops.ruc](loops.ruc) | Counting loops, walking until a 0, leaving a loop from inside | `***`, hi and 2 |
-| [functions.ruc](functions.ruc) | A function called from two places | 9 and 25 |
+| [numbers.ruc](numbers.ruc) | The order on the stack, numbers below 0, numbers with a point, random numbers, comparing numbers below 0 | 3, -5, 4608, 54, 61, 49, 0 and 1 |
+| [loops.ruc](loops.ruc) | Counting loops, walking until a 0, leaving a loop from inside, the largest in a list | `***`, hi, 2 and 77 |
+| [functions.ruc](functions.ruc) | A function called from two places, and from a loop | 9, 25, 4, 9 and 16 |
 | [recursion.ruc](recursion.ruc) | A function that calls itself | 120 |
 
 ## Cells
@@ -76,6 +76,8 @@ A cell can hold the number of another cell, and `JMP $CELL` goes there.
 
 **Random numbers.** `state × 1103515245 + 12345` visits all 2^32 values before it repeats. Its low bits repeat much sooner, so divide by 65536 to use the top 16 bits, and `MODS` then gives a number below any limit.
 
+**Comparing numbers below 0.** `IF LESS` and `IF MORE` see the size of a cell, so −5, stored as 4294967291, comes out above 3. Adding 2147483648 to both first flips their top bit, which moves every number below 0 under every number above it, and the comparison comes out right. Every number keeps its order, so this works for any two.
+
 ## Loops
 
 **A set number of times.** `STLP` and `NDLP` both stand on a counter that counts down to 0.
@@ -83,6 +85,8 @@ A cell can hold the number of another cell, and `JMP $CELL` goes there.
 **Walk until a 0.** `NDLP` tests the cell the pointer stands on at that moment, not the cell the loop started on. Moving with `JMPR` inside the loop makes it stop at the first 0, like the end of a word.
 
 **Leave a loop from inside.** End one branch on a cell that holds 0 and the other on a cell that does not, and `NDLP` stops or goes round to match. Such a loop starts on any cell that is not 0, so `STLP` lets it in.
+
+**The largest in a list.** Keep the largest so far in a cell, push it, step onto the next number and test it with `IF MORE $STACK`; when the number is larger, it takes the place of the largest. A pointer in a cell walks the list, since the loop also jumps back to the cell holding the largest.
 
 ## Functions
 
@@ -115,6 +119,8 @@ EQL TOPS
 ```
 
 The notes live on the tape and not on the stack of `PSHS`, since nearly every sum starts with `CLRS`. The code after a call goes in a new piece, since a call ends the piece it is in.
+
+**A loop with a call in it** cannot use `STLP`, since the code after a call has to be a new piece. It runs through pieces instead. One piece checks whether anything is left and calls, the next one uses the result, steps on and goes back to the first. functions.ruc squares 2, 3 and 4 that way.
 
 **A function that calls itself** puts its own values on the tape stack before the call, under the return note, and takes them back in the piece the call comes back to. recursion.ruc works out 5! = 120 that way.
 
