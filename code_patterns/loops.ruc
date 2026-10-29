@@ -54,3 +54,30 @@ JMP 6
 PRNTD
 JMP 9
 PRNTA
+
+JMP 31                  # the largest of 12, 30, 77, 5; each number is held up against the largest so far
+ADD 4
+JMP 32
+ADD 40
+JMP 31
+STLP
+	CLRS
+	JMP 30
+	PSHS
+	JMP 32
+	JMP $CELL
+	IF MORE $STACK
+		CLRS
+		PSHS
+		JMP 30
+		EQL TOPS
+	ENDIF
+	JMP 32
+	ADD
+	JMP 31
+	SUB
+NDLP
+JMP 30
+PRNTD
+JMP 9
+PRNTA

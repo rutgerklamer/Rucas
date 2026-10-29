@@ -45,8 +45,55 @@ STLP                    # Rucas cannot jump to a line, so every piece sits in on
 		PRNTD
 		JMP 3
 		PRNTA
+		JMP 4                   # the list 2, 3, 4 at cells 20 to 22, with its length in cell 4 and a pointer to it in cell 5
+		ADD 3
+		JMP 20
+		ADD 2
+		JMPR
+		ADD 3
+		JMPR
+		ADD 4
+		JMP 5
+		ADD 20
 		JMP 0
-		SUB $CELL               # piece 0 ends the loop, and with it the program
+		SUB $CELL
+		ADD 4
+	ENDIF
+	JMP 0
+	IF EQL 4                # SQUARE on every number of the list; a call ends the piece it is in, so this loop runs through pieces 4 and 5
+		JMP 4
+		IF
+			CLRS
+			JMP 5
+			JMP $CELL
+			PSHS
+			JMP 2
+			EQL TOPS
+			JMP 1
+			ADD
+			JMP $CELL
+			ADD 5
+			JMP 0
+			SUB $CELL
+			ADD 50
+		ELSE
+			JMP 0
+			SUB $CELL               # piece 0 ends the loop, and with it the program
+		ENDIF
+	ENDIF
+	JMP 0
+	IF EQL 5
+		JMP 2
+		PRNTD
+		JMP 3
+		PRNTA
+		JMP 5
+		ADD
+		JMP 4
+		SUB
+		JMP 0
+		SUB $CELL
+		ADD 4
 	ENDIF
 	JMP 0
 	IF EQL 50               # SQUARE, x = x * x

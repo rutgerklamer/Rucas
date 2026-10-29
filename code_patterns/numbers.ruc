@@ -113,3 +113,39 @@ STLP                    # three of them, each below 100
 	JMP 15
 	SUB
 NDLP
+
+JMP 20                  # -5 < 3, which IF LESS gets wrong, since -5 is stored as 4294967291
+SUB 5
+JMP 21
+ADD 3
+CLRS
+JMP 21
+PSHS
+JMP 20
+IF LESS $STACK
+	JMP 22
+	ADD
+ENDIF
+JMP 22
+PRNTD
+JMP 9
+PRNTA
+
+JMP 22
+SUB $CELL
+JMP 20                  # flipping the top bit of both puts every number below 0 under every number above it, so IF LESS gets it right
+ADD 2147483648
+JMP 21
+ADD 2147483648
+CLRS
+JMP 21
+PSHS
+JMP 20
+IF LESS $STACK
+	JMP 22
+	ADD
+ENDIF
+JMP 22
+PRNTD
+JMP 9
+PRNTA
