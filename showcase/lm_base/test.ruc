@@ -46,7 +46,7 @@
 		ADD 130
 	ENDIF
 	JMP 0
-	IF EQL 4                # rows (1.5, -2, 0.25) and (2, 0.5, -4), whose dot product is exactly 1.0 when DOT is right
+	IF EQL 4                # rows (1.5, -2, 0.25) and (2, 0.5, -4); one line of MATVEC is their dot product, exactly 1.0
 		CLRS
 		JMP 4
 		PSHS
@@ -74,9 +74,15 @@
 		SUB $CELL
 		ADD $STACK
 		ADD 3
+		JMP 4
+		SUB $CELL
+		ADD 50
 		JMP 5
 		SUB $CELL
 		ADD 3
+		JMP 18
+		SUB $CELL
+		ADD 1
 		JMP 1
 		ADD
 		JMP $CELL
@@ -89,7 +95,7 @@
 	IF EQL 5
 		JMP 2
 		SUB $CELL
-		ADD 4
+		ADD 50
 		JMP 5
 		SUB $CELL
 		ADD 1
@@ -136,7 +142,7 @@
 		SUB 2
 		JMP 2
 		SUB $CELL
-		ADD 4
+		ADD 50
 		JMP 5
 		SUB $CELL
 		ADD 1
@@ -149,20 +155,73 @@
 		ADD 120
 	ENDIF
 	JMP 0
-	IF EQL 8                # room for a list of 4
+	IF EQL 8                # the whole matrix times (1, 1, 1); its 2 lines start 3 apart
+		JMP 52
+		ADD 4096
+		JMPR
+		ADD 4096
+		JMPR
+		ADD 4096
+		CLRS
+		JMP 48
+		PSHS
+		JMP 2
+		SUB $CELL
+		ADD $STACK
+		JMP 3
+		SUB $CELL
+		ADD 52
+		JMP 4
+		SUB $CELL
+		ADD 56
 		JMP 5
 		SUB $CELL
-		ADD 4
+		ADD 3
+		JMP 18
+		SUB $CELL
+		ADD 2
+		JMP 19
+		SUB $CELL
+		ADD 3
 		JMP 1
 		ADD
 		JMP $CELL
 		ADD 9
 		JMP 0
 		SUB $CELL
+		ADD 110
+	ENDIF
+	JMP 0
+	IF EQL 9
+		JMP 2
+		SUB $CELL
+		ADD 56
+		JMP 5
+		SUB $CELL
+		ADD 2
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 10
+		JMP 0
+		SUB $CELL
+		ADD 120
+	ENDIF
+	JMP 0
+	IF EQL 10               # room for a list of 4
+		JMP 5
+		SUB $CELL
+		ADD 4
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 11
+		JMP 0
+		SUB $CELL
 		ADD 130
 	ENDIF
 	JMP 0
-	IF EQL 9                # e to the power 0, 1, -1 and 2.5, which covers both signs and a number past ln 2
+	IF EQL 11               # e to the power 0, 1, -1 and 2.5, which covers both signs and a number past ln 2
 		CLRS
 		JMP 4
 		PSHS
@@ -184,23 +243,23 @@
 		JMP 1
 		ADD
 		JMP $CELL
-		ADD 10
+		ADD 12
 		JMP 0
 		SUB $CELL
 		ADD 150
 	ENDIF
 	JMP 0
-	IF EQL 10               # a and n are still the list, since EXP leaves them as they were
+	IF EQL 12               # a and n are still the list, since EXP leaves them as they were
 		JMP 1
 		ADD
 		JMP $CELL
-		ADD 11
+		ADD 13
 		JMP 0
 		SUB $CELL
 		ADD 120
 	ENDIF
 	JMP 0
-	IF EQL 11               # tanh of 0, 0.5, -1 and 3
+	IF EQL 13               # tanh of 0, 0.5, -1 and 3
 		JMP 49
 		JMP $CELL
 		SUB $CELL
@@ -216,23 +275,232 @@
 		JMP 1
 		ADD
 		JMP $CELL
-		ADD 12
+		ADD 14
 		JMP 0
 		SUB $CELL
 		ADD 160
 	ENDIF
 	JMP 0
-	IF EQL 12
+	IF EQL 14
 		JMP 1
 		ADD
 		JMP $CELL
-		ADD 13
+		ADD 15
 		JMP 0
 		SUB $CELL
 		ADD 120
 	ENDIF
 	JMP 0
-	IF EQL 13
+	IF EQL 15               # softmax of 2, 1 and 0, which should come out near 0.665, 0.245 and 0.090
+		JMP 58
+		ADD 8192
+		JMPR
+		ADD 4096
+		JMP 2
+		SUB $CELL
+		ADD 58
+		JMP 5
+		SUB $CELL
+		ADD 3
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 16
+		JMP 0
+		SUB $CELL
+		ADD 200
+	ENDIF
+	JMP 0
+	IF EQL 16
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 17
+		JMP 0
+		SUB $CELL
+		ADD 120
+	ENDIF
+	JMP 0
+	IF EQL 17               # the log of 1, e, 0.5 and the smallest step, 1/4096
+		JMP 62
+		ADD 4096
+		JMPR
+		ADD 11134
+		JMPR
+		ADD 2048
+		JMPR
+		ADD 1
+		JMP 2
+		SUB $CELL
+		ADD 62
+		JMP 5
+		SUB $CELL
+		ADD 4
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 18
+		JMP 0
+		SUB $CELL
+		ADD 210
+	ENDIF
+	JMP 0
+	IF EQL 18
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 19
+		JMP 0
+		SUB $CELL
+		ADD 120
+	ENDIF
+	JMP 0
+	IF EQL 19               # 4 random numbers from -1 up to 1, the same ones on every run since the state starts at 2018
+		JMP 2
+		SUB $CELL
+		ADD 66
+		JMP 3
+		SUB $CELL
+		SUB 4096
+		JMP 4
+		SUB $CELL
+		ADD 8192
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 20
+		JMP 0
+		SUB $CELL
+		ADD 170
+	ENDIF
+	JMP 0
+	IF EQL 20
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 21
+		JMP 0
+		SUB $CELL
+		ADD 120
+	ENDIF
+	JMP 0
+	IF EQL 21               # the same 4 numbers, copied over to cell 70
+		JMP 3
+		SUB $CELL
+		ADD 70
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 22
+		JMP 0
+		SUB $CELL
+		ADD 180
+	ENDIF
+	JMP 0
+	IF EQL 22
+		JMP 2
+		SUB $CELL
+		ADD 70
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 23
+		JMP 0
+		SUB $CELL
+		ADD 120
+	ENDIF
+	JMP 0
+	IF EQL 23               # a step with the divisor still at 1.0; row j loses (1, 0.5)[j] * (1, 0, -1)
+		JMP 74
+		ADD 4096
+		JMPR
+		ADD 2048
+		JMPR
+		ADD 4096
+		JMPR
+		JMPR
+		SUB 4096
+		JMP 2
+		SUB $CELL
+		ADD 74
+		JMP 3
+		SUB $CELL
+		ADD 76
+		CLRS
+		JMP 48
+		PSHS
+		JMP 4
+		SUB $CELL
+		ADD $STACK
+		JMP 5
+		SUB $CELL
+		ADD 3
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 24
+		JMP 0
+		SUB $CELL
+		ADD 190
+	ENDIF
+	JMP 0
+	IF EQL 24
+		CLRS
+		JMP 48
+		PSHS
+		JMP 2
+		SUB $CELL
+		ADD $STACK
+		JMP 5
+		SUB $CELL
+		ADD 6
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 25
+		JMP 0
+		SUB $CELL
+		ADD 120
+	ENDIF
+	JMP 0
+	IF EQL 25               # the slope of tanh where it gave 0.5 and -0.5 is 0.75 both times
+		JMP 80
+		ADD 4096
+		JMPR
+		ADD 4096
+		JMPR
+		ADD 2048
+		JMPR
+		SUB 2048
+		JMP 2
+		SUB $CELL
+		ADD 80
+		JMP 3
+		SUB $CELL
+		ADD 82
+		JMP 5
+		SUB $CELL
+		ADD 2
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 26
+		JMP 0
+		SUB $CELL
+		ADD 165
+	ENDIF
+	JMP 0
+	IF EQL 26
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 27
+		JMP 0
+		SUB $CELL
+		ADD 120
+	ENDIF
+	JMP 0
+	IF EQL 27
 		SUB $CELL               # piece 0 ends the loop, and with it the program
 	ENDIF
 	JMP 0
