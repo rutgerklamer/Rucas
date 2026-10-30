@@ -15,7 +15,7 @@ PRNTA
 | ---- | ---------- |
 | [rucas.cpp](rucas.cpp) | The interpreter. A single C++ file with no dependencies. |
 | [samples](samples) | Example programs from 2018. They run unchanged on `rucas.cpp`. |
-| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. [lm_base](showcase/lm_base) is a base of functions for bigger models, and [names_network](showcase/names_network) a neural network built on it. |
+| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. [lm_base](showcase/lm_base) is a base of functions for bigger models, and [names_network.ruc](showcase/names/names_network.ruc) a neural network built on it. |
 | [code_patterns](code_patterns) | Small programs that show the moves Rucas programs are built from, and why they work. |
 | [main.cpp](main.cpp) | The original 2018 interpreter, kept as it was. It is Windows-only and has the bugs that `rucas.cpp` fixes. |
 | [main.ruc](main.ruc) | The original 2018 scratch program. It contains two typos (`JMPRT` and `PRNT`) that the old interpreter silently accepted; `rucas.cpp` points them out. |
@@ -259,10 +259,10 @@ ADD 100
 
 ### A network that learns names
 
-[names_network.ruc](showcase/names_network/names_network.ruc) is a small neural network on top of lm_base. It learns from the same names which symbol comes after the 3 before it. Each of the 3 gets 8 learned numbers, its embedding; the 24 of them feed 32 tanh neurons, and those give a score for every symbol, which SOFTMAX turns into chances. That makes 1,907 weights. It learns one example at a time, from random places in the names, for 10 passes of 9,630 examples, and then writes 20 names. It takes about a minute and a half.
+[names_network.ruc](showcase/names/names_network.ruc) is a small neural network on top of lm_base. It learns from the same names which symbol comes after the 3 before it. Each of the 3 gets 8 learned numbers, its embedding; the 24 of them feed 32 tanh neurons, and those give a score for every symbol, which SOFTMAX turns into chances. That makes 1,907 weights. It learns one example at a time, from random places in the names, for 10 passes of 9,630 examples, and then writes 20 names. It takes about a minute and a half.
 
 ```bash
-./rucas showcase/lm_base/base.ruc showcase/names_network/names_network.ruc showcase/names/names.txt
+./rucas showcase/lm_base/base.ruc showcase/names/names_network.ruc showcase/names/names.txt
 ```
 
 It prints the average loss of every pass, then the names. The loss says how surprised the network is by the right symbol; the counts in names.ruc come to 2.35.
