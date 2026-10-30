@@ -500,7 +500,47 @@
 		ADD 120
 	ENDIF
 	JMP 0
-	IF EQL 27
+	IF EQL 27               # errors (1, 0, -1) on the chances (0.5, 0.25, 0.25) become 0.375, -0.0625 and -0.3125, which add up to 0
+		JMP 84
+		ADD 4096
+		JMPR
+		JMPR
+		SUB 4096
+		JMPR
+		ADD 2048
+		JMPR
+		ADD 1024
+		JMPR
+		ADD 1024
+		JMP 2
+		SUB $CELL
+		ADD 84
+		JMP 3
+		SUB $CELL
+		ADD 87
+		JMP 5
+		SUB $CELL
+		ADD 3
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 28
+		JMP 0
+		SUB $CELL
+		ADD 205
+	ENDIF
+	JMP 0
+	IF EQL 28
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 29
+		JMP 0
+		SUB $CELL
+		ADD 120
+	ENDIF
+	JMP 0
+	IF EQL 29
 		SUB $CELL               # piece 0 ends the loop, and with it the program
 	ENDIF
 	JMP 0

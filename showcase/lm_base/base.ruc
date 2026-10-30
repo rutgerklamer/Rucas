@@ -1105,6 +1105,163 @@ STLP                    # Rucas cannot jump, so one loop runs every piece; the p
 		EQL TOPS
 	ENDIF
 	JMP 0
+	IF EQL 205              # DSOFTMAX, the n errors from a, on the chances SOFTMAX gave in b, become the errors on the scores it was given
+		CLRS                    # copies, so the caller's cells stay as they were
+		JMP 2
+		PSHS
+		JMP 28
+		EQL TOPS
+		CLRS
+		JMP 3
+		PSHS
+		JMP 30
+		EQL TOPS
+		CLRS
+		JMP 5
+		PSHS
+		JMP 29
+		EQL TOPS
+		JMP 21
+		SUB $CELL
+
+		JMP 29
+		STLP                    # raising one score lowers every other chance, so each error needs the sum of b[i] a[i] first
+			CLRS
+			JMP 28
+			JMP $CELL
+			PSHS
+			JMP 30
+			JMP $CELL
+			PSHS
+			MULS
+			JMP 20
+			EQL TOPS
+			IF MORE 2147483647      # the same sign trick as FMUL
+				CLRS
+				PSHS
+				SUB $CELL
+				SUB $STACK
+				CLRS
+				JMP 10
+				PSHS
+				JMP 20
+				PSHS
+				DIVS
+				JMP 21
+				SUB $STACK
+			ELSE
+				CLRS
+				JMP 10
+				PSHS
+				JMP 20
+				PSHS
+				DIVS
+				JMP 21
+				ADD $STACK
+			ENDIF
+
+			CLRS
+			JMP 6
+			PSHS
+			JMP 28
+			ADD $STACK
+			JMP 7
+			PSHS
+			JMP 30
+			ADD $STACK
+			JMP 29
+			SUB
+		NDLP
+
+		CLRS
+		JMP 2
+		PSHS
+		JMP 28
+		EQL TOPS
+		CLRS
+		JMP 3
+		PSHS
+		JMP 30
+		EQL TOPS
+		CLRS
+		JMP 5
+		PSHS
+		JMP 29
+		EQL TOPS
+		JMP 29
+		STLP                    # then a[i] becomes b[i] (a[i] - that sum)
+			CLRS
+			JMP 21
+			PSHS
+			JMP 28
+			JMP $CELL
+			SUB $STACK
+			CLRS
+			PSHS
+			JMP 30
+			JMP $CELL
+			PSHS
+			MULS
+			JMP 20
+			EQL TOPS
+			IF MORE 2147483647      # the same sign trick as FMUL
+				CLRS
+				PSHS
+				SUB $CELL
+				SUB $STACK
+				CLRS
+				JMP 10
+				PSHS
+				JMP 20
+				PSHS
+				DIVS
+				JMP 20
+				EQL TOPS
+				CLRS
+				PSHS
+				SUB $CELL
+				SUB $STACK
+			ELSE
+				CLRS
+				JMP 10
+				PSHS
+				JMP 20
+				PSHS
+				DIVS
+				JMP 20
+				EQL TOPS
+			ENDIF
+			CLRS
+			JMP 20
+			PSHS
+			JMP 28
+			JMP $CELL
+			EQL TOPS
+
+			CLRS
+			JMP 6
+			PSHS
+			JMP 28
+			ADD $STACK
+			JMP 7
+			PSHS
+			JMP 30
+			ADD $STACK
+			JMP 29
+			SUB
+		NDLP
+
+		JMP 1                   # return
+		JMP $CELL
+		CLRS
+		PSHS
+		SUB $CELL
+		JMP 1
+		SUB
+		JMP 0
+		EQL TOPS
+	ENDIF
+	JMP 0
 	IF EQL 210              # LOG, each of the n numbers from a becomes its natural log
 		CLRS                    # copies, so the caller's cells stay as they were
 		JMP 2
