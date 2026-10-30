@@ -15,7 +15,7 @@ PRNTA
 | ---- | ---------- |
 | [rucas.cpp](rucas.cpp) | The interpreter. A single C++ file with no dependencies. |
 | [samples](samples) | Example programs from 2018. They run unchanged on `rucas.cpp`. |
-| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. [lm_base](showcase/lm_base) is a base of functions for bigger models, and [names_network.ruc](showcase/names/names_network.ruc) a neural network built on it. |
+| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. [lm_base](showcase/lm_base) is a base of functions for bigger models, and [names_network.ruc](showcase/names/names_network.ruc) and [names_attention.ruc](showcase/names/names_attention.ruc) are neural networks built on it. |
 | [code_patterns](code_patterns) | Small programs that show the moves Rucas programs are built from, and why they work. |
 | [main.cpp](main.cpp) | The original 2018 interpreter, kept as it was. It is Windows-only and has the bugs that `rucas.cpp` fixes. |
 | [main.ruc](main.ruc) | The original 2018 scratch program. It contains two typos (`JMPRT` and `PRNT`) that the old interpreter silently accepted; `rucas.cpp` points them out. |
@@ -237,6 +237,7 @@ To write other names, change the seed on the line `ADD 2018`, or give it a list 
 | 180 | COPY | Copies n numbers from a to b |
 | 190 | STEP | A learning step; weight i of line j in the matrix at c loses a[j] × b[i] ÷ cell 9 |
 | 200 | SOFTMAX | Turns n numbers from a into chances that add up to 1.0 |
+| 205 | DSOFTMAX | Turns n errors from a, on the chances SOFTMAX gave in b, into the errors on its scores |
 | 210 | LOG | Turns each of n numbers from a into its natural log |
 
 Numbers are signed, with 12 bits after the point, so 1.0 is 4096. A list is n numbers starting at a cell, a step apart; the step for a is in cell 6 and the step for b in cell 7, both 1 to start. A matrix is lines of n numbers, with cell 18 saying how many lines and cell 19 how far apart they start, so the same MATVEC reads rows or columns. Arguments go in cells 2 (a), 3 (b), 4 (c) and 5 (n), and a single result comes back in c. STEP divides by cell 9, which starts at 4096; 4096 ÷ rate makes it a learning step of that rate. RAND keeps its state in cell 31, starting at 2018, so every run comes out the same. Cells 48 to 95 are the program's own, and ALLOC hands out cells from 96. A call to FMUL that comes back to piece 2;
@@ -259,7 +260,7 @@ ADD 100
 
 ### A network that learns names
 
-[names_network.ruc](showcase/names/names_network.ruc) is a small neural network on top of lm_base. It learns from the same names which symbol comes after the 3 before it. Each of the 3 gets 8 learned numbers, its embedding; the 24 of them feed 32 tanh neurons, and those give a score for every symbol, which SOFTMAX turns into chances. That makes 1,907 weights. It learns one example at a time, from random places in the names, for 10 passes of 9,630 examples, and then writes 20 names. It takes about a minute and a half.
+[names_network.ruc](showcase/names/names_network.ruc) is a small neural network on top of lm_base. It learns from the same names which symbol comes after the 3 before it. Each of the 3 gets 8 learned numbers, its embedding; the 24 of them feed 32 tanh neurons, and those give a score for every symbol, which SOFTMAX turns into chances. That makes 1,907 weights. It learns one example at a time, from random places in the names, for 10 passes of 9,630 examples, and then writes 20 names. It takes under a minute.
 
 ```bash
 ./rucas showcase/lm_base/base.ruc showcase/names/names_network.ruc showcase/names/names.txt
@@ -280,6 +281,31 @@ ila
 andel
 haelani
 cadeline
+```
+
+### A network with attention
+
+[names_attention.ruc](showcase/names/names_attention.ruc) is that network with one attention head added, so besides the 3 symbols before the next one it also looks back over 8. Each of the 8 gets its embedding plus one for its place. The newest one asks a question, A times its embedding, and each of the 8 gets a score for how well it answers; SOFTMAX turns the scores into chances, and the 8 mixed by those chances go into the tanh neurons together with the 3 newest. That makes 2,291 weights. It learns at 0.02, then at 0.005 for the last 3 passes, and takes about a minute and a half.
+
+```bash
+./rucas showcase/lm_base/base.ruc showcase/names/names_attention.ruc showcase/names/names.txt
+```
+
+It ends at a loss of 2.06, where names_network.ruc ends at 2.13.
+
+```
+2.4580
+2.3000
+...
+2.0610
+maialey
+mirk
+belia
+aliliah
+lachley
+rari
+abylinn
+julie
 ```
 
 ### Samples

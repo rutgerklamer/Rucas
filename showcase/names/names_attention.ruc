@@ -1,0 +1,1417 @@
+# A network with one attention head that learns from a list of names which letter comes next, looking back over the 8 symbols before it, then writes 20 new names
+
+	JMP 0
+	IF EQL 1                # read the names into a stream of symbols; eight 0s before every name let each example read its 8 symbols straight off the tape
+		CLRS
+		JMP 8
+		PSHS
+		JMP 72
+		EQL TOPS
+		ADD 8
+		JMP 79
+		CINP
+		STLP                    # until the end of the input
+			IF EQL 10               # a line break is symbol 0
+				ADD 86
+			ENDIF
+			IF MORE 95              # a letter or a line break
+				SUB 96
+				CLRS
+				PSHS
+				JMP 72
+				JMP $CELL
+				EQL TOPS
+				JMP 72
+				ADD
+				JMP 67
+				ADD                     # every letter and every line break is one example
+				JMP 79
+				IF EQL 0                # seven more 0s after a name, so the next one starts after eight as well
+					JMP 72
+					ADD 7
+				ENDIF
+			ENDIF
+			JMP 79
+			CINP
+		NDLP
+
+		CLRS                    # the length, without the seven 0s after the last name, since nothing follows them
+		JMP 8
+		PSHS
+		JMP 72
+		SUB 7
+		PSHS
+		SUBS
+		JMP 49
+		EQL TOPS
+		CLRS
+		PSHS
+		JMP 5
+		EQL TOPS
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 2
+		JMP 0
+		SUB $CELL
+		ADD 130
+	ENDIF
+	JMP 0
+	IF EQL 2                # one ALLOC for the whole network, so every part is a fixed distance from the start
+		CLRS
+		JMP 4
+		PSHS
+		JMP 48
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 2594
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 3
+		JMP 0
+		SUB $CELL
+		ADD 130
+	ENDIF
+	JMP 0
+	IF EQL 3                # C 27 x 8, P 8 x 8, A 8 x 8, W1 32 x 33, W2 27 x 33, then x, u, a, h, p, dh, dx, ds, G, du and t
+		CLRS
+		JMP 4
+		PSHS
+		JMP 50
+		EQL TOPS
+		JMP 51
+		EQL TOPS
+		ADD 216
+		JMP 52
+		EQL TOPS
+		ADD 280
+		JMP 53
+		EQL TOPS
+		ADD 344
+		JMP 54
+		EQL TOPS
+		ADD 1400
+		JMP 55
+		EQL TOPS
+		ADD 2291
+		JMP 56
+		EQL TOPS
+		ADD 2300
+		JMP 57
+		EQL TOPS
+		ADD 2364
+		JMP 58
+		EQL TOPS
+		ADD 2372
+		JMP 59
+		EQL TOPS
+		ADD 2380
+		JMP 60
+		EQL TOPS
+		ADD 2413
+		JMP 61
+		EQL TOPS
+		ADD 2440
+		JMP 62
+		EQL TOPS
+		ADD 2473
+		JMP 63
+		EQL TOPS
+		ADD 2506
+		JMP 64
+		EQL TOPS
+		ADD 2514
+		JMP 65
+		EQL TOPS
+		ADD 2578
+		JMP 66
+		EQL TOPS
+		ADD 2586
+		JMP 55                  # x starts with a 1.0 and h ends in one, which turns the first or the last weight of every line into its bias
+		JMP $CELL
+		ADD 4096
+		JMP 59
+		JMP $CELL
+		JMPR 32
+		ADD 4096
+		JMP 81                  # STEP with a list holding -1.0 adds instead of taking away
+		SUB 4096
+
+		CLRS                    # every weight starts small and random, since equal weights would all learn the same thing
+		JMP 50
+		PSHS
+		JMP 2
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 216
+		JMP 3
+		SUB $CELL
+		SUB 4096
+		JMP 4
+		SUB $CELL
+		ADD 8192
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 4
+		JMP 0
+		SUB $CELL
+		ADD 170
+	ENDIF
+	JMP 0
+	IF EQL 4                # the places start smaller, since they are added to the letters
+		CLRS
+		JMP 51
+		PSHS
+		JMP 2
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 64
+		JMP 3
+		SUB $CELL
+		SUB 2048
+		JMP 4
+		SUB $CELL
+		ADD 4096
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 5
+		JMP 0
+		SUB $CELL
+		ADD 170
+	ENDIF
+	JMP 0
+	IF EQL 5                # A and W1 lie side by side and start in the same range, so one call fills both
+		CLRS
+		JMP 52
+		PSHS
+		JMP 2
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 1120
+		JMP 3
+		SUB $CELL
+		SUB 819
+		JMP 4
+		SUB $CELL
+		ADD 1638
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 6
+		JMP 0
+		SUB $CELL
+		ADD 170
+	ENDIF
+	JMP 0
+	IF EQL 6
+		CLRS
+		JMP 54
+		PSHS
+		JMP 2
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 891
+		JMP 3
+		SUB $CELL
+		SUB 410
+		JMP 4
+		SUB $CELL
+		ADD 820
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 7
+		JMP 0
+		SUB $CELL
+		ADD 170
+	ENDIF
+	JMP 0
+	IF EQL 7
+		JMP 68
+		SUB $CELL
+		ADD 10                  # passes over the names
+		JMP 0
+		SUB $CELL
+		ADD 10
+	ENDIF
+
+	JMP 0
+	IF EQL 10               # a pass, with as many examples as there are letters and line breaks
+		JMP 68
+		IF
+			JMP 73
+			SUB $CELL
+			CLRS
+			JMP 67
+			PSHS
+			JMP 69
+			EQL TOPS
+			JMP 80
+			SUB $CELL
+			ADD 204800              # 4096 / 0.02, a rate of 0.02; attention learns badly with steps as big as names_network.ruc takes
+			JMP 68
+			IF LESS 4               # the last 3 passes take steps of 0.005, so the weights settle
+				JMP 80
+				SUB $CELL
+				ADD 819200
+			ENDIF
+			JMP 0
+			SUB $CELL
+			ADD 11
+		ELSE
+			JMP 0
+			SUB $CELL
+			ADD 70
+		ENDIF
+	ENDIF
+	JMP 0
+	IF EQL 11
+		JMP 69
+		IF                      # a random place, since going through the names in order would teach one first letter at a time
+			JMP 2
+			SUB $CELL
+			ADD 70
+			JMP 3
+			SUB $CELL
+			CLRS
+			JMP 49
+			PSHS
+			JMP 4
+			EQL TOPS
+			JMP 5
+			SUB $CELL
+			ADD
+			JMP 1
+			ADD
+			JMP $CELL
+			ADD 12
+			JMP 0
+			SUB $CELL
+			ADD 170
+		ELSE                    # the pass is over, so print its average loss
+			CLRS
+			JMP 67
+			PSHS
+			JMP 73
+			PSHS
+			DIVS
+			JMP 74
+			EQL TOPS
+			JMP 2
+			SUB $CELL
+			ADD 74
+			JMP 5
+			SUB $CELL
+			ADD
+			JMP 1
+			ADD
+			JMP $CELL
+			ADD 13
+			JMP 0
+			SUB $CELL
+			ADD 120
+		ENDIF
+	ENDIF
+	JMP 0
+	IF EQL 12               # a place counts if it holds a letter or the end of a name; the other 0s only pad
+		JMP 78
+		SUB $CELL
+		JMP 70
+		IF MORE 7
+			CLRS
+			JMP 48
+			PSHS
+			JMP 70
+			PSHS
+			ADDS
+			JMP 72
+			EQL TOPS
+			JMP $CELL
+			PSHS
+			JMP 71
+			EQL TOPS
+			JMP 78
+			ADD
+			JMP 71
+			IF EQL 0                # a 0 right after a 0 is padding
+				JMP 72
+				JMP $CELL
+				JMPL
+				IF EQL 0
+					JMP 78
+					SUB
+				ENDIF
+			ENDIF
+		ENDIF
+		JMP 78
+		IF                      # the network reads the 8 symbols before w, so w is the place itself
+			JMP 1
+			ADD
+			JMP $CELL
+			ADD 14
+			JMP 0
+			SUB $CELL
+			ADD 50
+		ELSE
+			JMP 0
+			SUB $CELL
+			ADD 11
+		ENDIF
+	ENDIF
+	JMP 0
+	IF EQL 13
+		JMP 68
+		SUB
+		JMP 0
+		SUB $CELL
+		ADD 10
+	ENDIF
+	JMP 0
+	IF EQL 14               # the loss is minus the log of the chance the network gave the right symbol
+		CLRS
+		JMP 60
+		PSHS
+		JMP 71
+		PSHS
+		ADDS
+		JMP $STACK
+		PSHS
+		JMP 74
+		EQL TOPS
+		JMP 2
+		SUB $CELL
+		ADD 74
+		JMP 5
+		SUB $CELL
+		ADD
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 15
+		JMP 0
+		SUB $CELL
+		ADD 210
+	ENDIF
+	JMP 0
+	IF EQL 15               # learning starts at the scores, where the error is simply p, minus 1.0 for the right symbol
+		CLRS
+		JMP 74
+		PSHS
+		JMP 73
+		SUB $STACK
+		CLRS
+		JMP 60
+		PSHS
+		JMP 71
+		PSHS
+		ADDS
+		JMP $STACK
+		SUB 4096
+
+		CLRS                    # the error sent back to h, read down the columns of W2 before W2 changes
+		JMP 54
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 60
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 61
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 27
+		JMP 18
+		SUB $CELL
+		ADD 33
+		JMP 19
+		SUB $CELL
+		ADD
+		JMP 6
+		SUB $CELL
+		ADD 33
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 16
+		JMP 0
+		SUB $CELL
+		ADD 110
+	ENDIF
+	JMP 0
+	IF EQL 16               # back through tanh
+		JMP 6
+		SUB $CELL
+		ADD
+		CLRS
+		JMP 61
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 59
+		PSHS
+		JMP 3
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 32
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 17
+		JMP 0
+		SUB $CELL
+		ADD 165
+	ENDIF
+	JMP 0
+	IF EQL 17               # the error sent back to x, read down the columns of W1 before W1 changes
+		CLRS
+		JMP 53
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 61
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 62
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 32
+		JMP 18
+		SUB $CELL
+		ADD 33
+		JMP 19
+		SUB $CELL
+		ADD
+		JMP 6
+		SUB $CELL
+		ADD 33
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 18
+		JMP 0
+		SUB $CELL
+		ADD 110
+	ENDIF
+	JMP 0
+	IF EQL 18               # into the attention; the error on each chance is its row of E times the error on m
+		JMP 6
+		SUB $CELL
+		ADD
+		CLRS
+		JMP 56
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 62
+		PSHS
+		JMP 3
+		EQL TOPS
+		ADD
+		CLRS
+		JMP 63
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 8
+		JMP 18
+		SUB $CELL
+		ADD 8
+		JMP 19
+		SUB $CELL
+		ADD 8
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 19
+		JMP 0
+		SUB $CELL
+		ADD 110
+	ENDIF
+	JMP 0
+	IF EQL 19               # and back through the softmax to the scores
+		CLRS
+		JMP 63
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 58
+		PSHS
+		JMP 3
+		EQL TOPS
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 20
+		JMP 0
+		SUB $CELL
+		ADD 205
+	ENDIF
+	JMP 0
+	IF EQL 20               # G gathers minus the error on every row of E, so it starts at 0; with a step of 0, COPY spreads cell 95 over it
+		JMP 2
+		SUB $CELL
+		ADD 95
+		CLRS
+		JMP 64
+		PSHS
+		JMP 3
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 64
+		JMP 6
+		SUB $CELL
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 21
+		JMP 0
+		SUB $CELL
+		ADD 180
+	ENDIF
+	JMP 0
+	IF EQL 21               # with a divisor of 4096 STEP takes away whole products, so G can gather; first the 3 rows that sit in x
+		JMP 6
+		SUB $CELL
+		ADD
+		JMP 9
+		SUB $CELL
+		ADD 4096
+		JMP 2
+		SUB $CELL
+		ADD 10
+		CLRS
+		JMP 62
+		PSHS
+		JMP 3
+		EQL TOPS
+		ADD 9
+		CLRS
+		JMP 64
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 24
+		JMP 18
+		SUB $CELL
+		ADD
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 22
+		JMP 0
+		SUB $CELL
+		ADD 190
+	ENDIF
+	JMP 0
+	IF EQL 22               # every row went into m as much as its chance
+		CLRS
+		JMP 58
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 62
+		PSHS
+		JMP 3
+		EQL TOPS
+		ADD
+		JMP 5
+		SUB $CELL
+		ADD 8
+		JMP 18
+		SUB $CELL
+		ADD 8
+		JMP 19
+		SUB $CELL
+		ADD 8
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 23
+		JMP 0
+		SUB $CELL
+		ADD 190
+	ENDIF
+	JMP 0
+	IF EQL 23               # and every row was scored against u
+		CLRS
+		JMP 63
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 57
+		PSHS
+		JMP 3
+		EQL TOPS
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 24
+		JMP 0
+		SUB $CELL
+		ADD 190
+	ENDIF
+	JMP 0
+	IF EQL 24               # the error on u, read down the columns of E
+		CLRS
+		JMP 56
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 63
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 65
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 19
+		SUB $CELL
+		ADD
+		JMP 6
+		SUB $CELL
+		ADD 8
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 25
+		JMP 0
+		SUB $CELL
+		ADD 110
+	ENDIF
+	JMP 0
+	IF EQL 25               # u came from the newest row through A, so that row gets the columns of A times it, before A changes
+		CLRS
+		JMP 52
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 65
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 66
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 26
+		JMP 0
+		SUB $CELL
+		ADD 110
+	ENDIF
+	JMP 0
+	IF EQL 26
+		JMP 6
+		SUB $CELL
+		ADD
+		JMP 2
+		SUB $CELL
+		ADD 10
+		CLRS
+		JMP 66
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 64
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 18
+		SUB $CELL
+		ADD
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 27
+		JMP 0
+		SUB $CELL
+		ADD 190
+	ENDIF
+	JMP 0
+	IF EQL 27               # every error is known now, so the weights take their learning steps
+		CLRS
+		JMP 80
+		PSHS
+		JMP 9
+		EQL TOPS
+		CLRS
+		JMP 60
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 59
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 54
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 33
+		JMP 18
+		SUB $CELL
+		ADD 27
+		JMP 19
+		SUB $CELL
+		ADD 33
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 28
+		JMP 0
+		SUB $CELL
+		ADD 190
+	ENDIF
+	JMP 0
+	IF EQL 28
+		CLRS
+		JMP 61
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 55
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 53
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 18
+		SUB $CELL
+		ADD 32
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 29
+		JMP 0
+		SUB $CELL
+		ADD 190
+	ENDIF
+	JMP 0
+	IF EQL 29
+		CLRS
+		JMP 65
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 56
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 52
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 8
+		JMP 18
+		SUB $CELL
+		ADD 8
+		JMP 19
+		SUB $CELL
+		ADD 8
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 30
+		JMP 0
+		SUB $CELL
+		ADD 190
+	ENDIF
+	JMP 0
+	IF EQL 30               # G is minus the error, so the places and the letters take their steps with -1.0
+		JMP 2
+		SUB $CELL
+		ADD 81
+		CLRS
+		JMP 64
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 51
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 64
+		JMP 18
+		SUB $CELL
+		ADD
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 31
+		JMP 0
+		SUB $CELL
+		ADD 190
+	ENDIF
+	JMP 0
+	IF EQL 31               # each row of G goes to the letter its row of E came from
+		CLRS
+		JMP 72
+		PSHS
+		JMP 82
+		EQL TOPS
+		SUB
+		CLRS
+		JMP 64
+		PSHS
+		JMP 83
+		EQL TOPS
+		JMP 84
+		SUB $CELL
+		ADD 8
+		JMP 0
+		SUB $CELL
+		ADD 32
+	ENDIF
+	JMP 0
+	IF EQL 32               # a call cannot sit inside STLP, so this loop runs through pieces
+		JMP 84
+		IF
+			CLRS
+			JMP 82
+			JMP $CELL
+			PSHS
+			JMP 78
+			SUB $CELL
+			ADD 8
+			PSHS
+			MULS
+			JMP 50
+			PSHS
+			ADDS
+			JMP 4
+			EQL TOPS
+			CLRS
+			JMP 83
+			PSHS
+			JMP 3
+			EQL TOPS
+			JMP 5
+			SUB $CELL
+			ADD 8
+			JMP 1
+			ADD
+			JMP $CELL
+			ADD 33
+			JMP 0
+			SUB $CELL
+			ADD 190
+		ELSE
+			JMP 0
+			SUB $CELL
+			ADD 34
+		ENDIF
+	ENDIF
+	JMP 0
+	IF EQL 33
+		JMP 82
+		SUB
+		JMP 83
+		ADD 8
+		JMP 84
+		SUB
+		JMP 0
+		SUB $CELL
+		ADD 32
+	ENDIF
+	JMP 0
+	IF EQL 34
+		JMP 69
+		SUB
+		JMP 0
+		SUB $CELL
+		ADD 11
+	ENDIF
+
+	JMP 0
+	IF EQL 50               # FORWARD, the network on the 8 symbols before cell w, leaving the chances for the next one in p
+		CLRS                    # E gets the embeddings of the 8 symbols, the newest first
+		JMP 72
+		PSHS
+		JMP 82
+		EQL TOPS
+		SUB
+		CLRS
+		JMP 56
+		PSHS
+		JMP 83
+		EQL TOPS
+		JMP 84
+		SUB $CELL
+		ADD 8
+		JMP 0
+		SUB $CELL
+		ADD 51
+	ENDIF
+	JMP 0
+	IF EQL 51               # the same loop through pieces as when the letters learn
+		JMP 84
+		IF
+			CLRS
+			JMP 82
+			JMP $CELL
+			PSHS
+			JMP 78
+			SUB $CELL
+			ADD 8
+			PSHS
+			MULS
+			JMP 50
+			PSHS
+			ADDS
+			JMP 2
+			EQL TOPS
+			CLRS
+			JMP 83
+			PSHS
+			JMP 3
+			EQL TOPS
+			JMP 5
+			SUB $CELL
+			ADD 8
+			JMP 1
+			ADD
+			JMP $CELL
+			ADD 52
+			JMP 0
+			SUB $CELL
+			ADD 180
+		ELSE
+			JMP 0
+			SUB $CELL
+			ADD 53
+		ENDIF
+	ENDIF
+	JMP 0
+	IF EQL 52
+		JMP 82
+		SUB
+		JMP 83
+		ADD 8
+		JMP 84
+		SUB
+		JMP 0
+		SUB $CELL
+		ADD 51
+	ENDIF
+	JMP 0
+	IF EQL 53               # plus the embedding of its place, so attention can tell the newest symbol from older ones
+		JMP 9
+		SUB $CELL
+		ADD 4096
+		JMP 2
+		SUB $CELL
+		ADD 81
+		CLRS
+		JMP 51
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 56
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 64
+		JMP 18
+		SUB $CELL
+		ADD
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 54
+		JMP 0
+		SUB $CELL
+		ADD 190
+	ENDIF
+	JMP 0
+	IF EQL 54               # u is A times the newest row, and how well a row matches u is its score
+		CLRS
+		JMP 52
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 56
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 57
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 8
+		JMP 18
+		SUB $CELL
+		ADD 8
+		JMP 19
+		SUB $CELL
+		ADD 8
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 55
+		JMP 0
+		SUB $CELL
+		ADD 110
+	ENDIF
+	JMP 0
+	IF EQL 55
+		CLRS
+		JMP 56
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 57
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 58
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 56
+		JMP 0
+		SUB $CELL
+		ADD 110
+	ENDIF
+	JMP 0
+	IF EQL 56               # the scores become chances, which say how much of each row to take
+		CLRS
+		JMP 58
+		PSHS
+		JMP 2
+		EQL TOPS
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 57
+		JMP 0
+		SUB $CELL
+		ADD 200
+	ENDIF
+	JMP 0
+	IF EQL 57               # m, the rows mixed by their chances, read down the columns of E
+		CLRS
+		JMP 56
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 58
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 55
+		PSHS
+		JMP 4
+		EQL TOPS
+		ADD
+		JMP 19
+		SUB $CELL
+		ADD
+		JMP 6
+		SUB $CELL
+		ADD 8
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 58
+		JMP 0
+		SUB $CELL
+		ADD 110
+	ENDIF
+	JMP 0
+	IF EQL 58               # the hidden layer, 32 lines of W1 times x, which holds 1.0, m and the 3 newest rows of E
+		JMP 6
+		SUB $CELL
+		ADD
+		CLRS
+		JMP 53
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 55
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 59
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 33
+		JMP 18
+		SUB $CELL
+		ADD 32
+		JMP 19
+		SUB $CELL
+		ADD 33
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 59
+		JMP 0
+		SUB $CELL
+		ADD 110
+	ENDIF
+	JMP 0
+	IF EQL 59
+		CLRS
+		JMP 59
+		PSHS
+		JMP 2
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 32
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 60
+		JMP 0
+		SUB $CELL
+		ADD 160
+	ENDIF
+	JMP 0
+	IF EQL 60               # a score for every symbol, 27 lines of W2 times h
+		CLRS
+		JMP 54
+		PSHS
+		JMP 2
+		EQL TOPS
+		CLRS
+		JMP 59
+		PSHS
+		JMP 3
+		EQL TOPS
+		CLRS
+		JMP 60
+		PSHS
+		JMP 4
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 33
+		JMP 18
+		SUB $CELL
+		ADD 27
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 61
+		JMP 0
+		SUB $CELL
+		ADD 110
+	ENDIF
+	JMP 0
+	IF EQL 61
+		CLRS
+		JMP 60
+		PSHS
+		JMP 2
+		EQL TOPS
+		JMP 5
+		SUB $CELL
+		ADD 27
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 62
+		JMP 0
+		SUB $CELL
+		ADD 200
+	ENDIF
+	JMP 0
+	IF EQL 62
+		JMP 1                   # return
+		JMP $CELL
+		CLRS
+		PSHS
+		SUB $CELL
+		JMP 1
+		SUB
+		JMP 0
+		EQL TOPS
+	ENDIF
+
+	JMP 0
+	IF EQL 70               # trained, so write 20 names, on the free cells after the network, where every cell is still 0
+		JMP 75
+		SUB $CELL
+		ADD 20
+		CLRS
+		JMP 8
+		PSHS
+		JMP 72
+		EQL TOPS
+		ADD 8
+		JMP 0
+		SUB $CELL
+		ADD 71
+	ENDIF
+	JMP 0
+	IF EQL 71
+		JMP 75
+		IF
+			JMP 1
+			ADD
+			JMP $CELL
+			ADD 72
+			JMP 0
+			SUB $CELL
+			ADD 50
+		ELSE
+			JMP 0
+			SUB $CELL               # piece 0 ends the loop, and with it the program
+		ENDIF
+	ENDIF
+	JMP 0
+	IF EQL 72               # a random point from 0 up to 1.0
+		JMP 2
+		SUB $CELL
+		ADD 76
+		JMP 3
+		SUB $CELL
+		JMP 4
+		SUB $CELL
+		ADD 4096
+		JMP 5
+		SUB $CELL
+		ADD
+		JMP 1
+		ADD
+		JMP $CELL
+		ADD 73
+		JMP 0
+		SUB $CELL
+		ADD 170
+	ENDIF
+	JMP 0
+	IF EQL 73               # walk around the chances until the point falls inside one, as names_optimised.ruc walks its counts
+		JMP 77
+		SUB $CELL
+		JMP 67
+		STLP
+			CLRS
+			JMP 60
+			PSHS
+			JMP 77
+			PSHS
+			ADDS
+			JMP $STACK
+			PSHS
+			JMP 76
+			IF LESS $STACK
+				JMP 95                  # cell 95 stays 0, so the walk ends
+			ELSE
+				SUB $STACK
+				JMP 77
+				ADD
+				IF EQL 27               # past z, back to symbol 0, since the chances can add up to a little under 1.0
+					SUB $CELL
+				ENDIF
+				JMP 67
+			ENDIF
+		NDLP
+
+		JMP 77
+		IF                      # a letter; print it and write it at w, where it becomes the newest of the 8 symbols
+			CLRS
+			PSHS
+			JMP 78
+			EQL TOPS
+			ADD 96
+			PRNTA
+			CLRS
+			JMP 77
+			PSHS
+			JMP 72
+			JMP $CELL
+			EQL TOPS
+			JMP 72
+			ADD
+			JMP 0
+			SUB $CELL
+			ADD 71
+		ELSE                    # the end of a name; the next one starts 8 cells on, after eight 0s
+			JMP 15
+			PRNTA
+			JMP 72
+			ADD 8
+			JMP 75
+			SUB
+			JMP 0
+			SUB $CELL
+			ADD 71
+		ENDIF
+	ENDIF
+	JMP 0
+NDLP
