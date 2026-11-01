@@ -15,7 +15,7 @@ PRNTA
 | ---- | ---------- |
 | [rucas.cpp](rucas.cpp) | The interpreter. A single C++ file with no dependencies. |
 | [samples](samples) | Example programs from 2018. They run unchanged on `rucas.cpp`. |
-| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. [lm_base](showcase/lm_base) is a base of functions for bigger models, and [names_network.ruc](showcase/names/names_network.ruc) and [names_attention.ruc](showcase/names/names_attention.ruc) are neural networks built on it. |
+| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. [lm_base](showcase/lm_base) is a base of functions for bigger models; [names_network.ruc](showcase/names/names_network.ruc), [names_attention.ruc](showcase/names/names_attention.ruc) and [shakespeare.ruc](showcase/shakespeare/shakespeare.ruc) are neural networks built on it. |
 | [code_patterns](code_patterns) | Small programs that show the moves Rucas programs are built from, and why they work. |
 | [main.cpp](main.cpp) | The original 2018 interpreter, kept as it was. It is Windows-only and has the bugs that `rucas.cpp` fixes. |
 | [main.ruc](main.ruc) | The original 2018 scratch program. It contains two typos (`JMPRT` and `PRNT`) that the old interpreter silently accepted; `rucas.cpp` points them out. |
@@ -306,6 +306,33 @@ lachley
 rari
 abylinn
 julie
+```
+
+### A network that reads Shakespeare
+
+[shakespeare.ruc](showcase/shakespeare/shakespeare.ruc) reads the first 100,000 characters of Shakespeare, from the start of Coriolanus, and learns from every symbol as it comes. It reads the text only once, so the text never has to fit on the tape. It knows 36 symbols; a to z, a line break, a space and `, . : ; ' ? ! -`, with capitals read as small letters. Each of the 4 symbols before the next one gets 16 learned numbers, the 64 of them feed 64 tanh neurons, and those give a score for every symbol. That makes 7,076 weights. It learns at 0.02 for the first 75,000 symbols and at 0.005 after, then goes on writing where the text stops. It is built on names_network.ruc rather than names_attention.ruc, since on this much text one attention head gained nothing. It takes about three and a half minutes.
+
+```bash
+./rucas showcase/lm_base/base.ruc showcase/shakespeare/shakespeare.ruc showcase/shakespeare/shakespeare.txt
+```
+
+It prints the average loss of every 10,000 symbols, then 1,000 characters of its own.
+
+```
+2.5251
+2.3244
+...
+1.9584
+...
+sir coar, spelate will, and be sess to foee of then! thim botio gow is bote. your thou have is you to gome.
+
+my that hims
+the blang.
+
+senenius:
+thy the wotr goat
+so bifies and baked
+a mon with him meace my soak yase sonio, way.
 ```
 
 ### Samples
