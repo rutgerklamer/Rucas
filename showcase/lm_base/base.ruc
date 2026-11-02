@@ -847,6 +847,15 @@ STLP                    # Rucas cannot jump, so one loop runs every piece; the p
 		PSHS
 		JMP 21
 		EQL TOPS
+		CLRS                    # 4294967295 / cell 9, so r times it compares with a random state of 32 bits
+		JMP 9
+		PSHS
+		JMP 27
+		SUB $CELL
+		SUB
+		PSHS
+		DIVS
+		EQL TOPS
 
 		JMP 21
 		STLP                    # one line per round, as in MATVEC
@@ -883,27 +892,64 @@ STLP                    # Rucas cannot jump, so one loop runs every piece; the p
 				MULS
 				JMP 20
 				EQL TOPS
+				JMP 24
+				SUB $CELL
+				JMP 20
 				IF MORE 2147483647      # divided once, after the whole product, or the small steps of learning would round away to 0
 					CLRS
 					PSHS
 					SUB $CELL
 					SUB $STACK
-					CLRS
-					JMP 9
-					PSHS
+					JMP 24
+					ADD
+				ENDIF
+
+				CLRS                    # the next random state, as in RAND
+				JMP 22
+				SUB $CELL
+				ADD 1103515245
+				PSHS
+				JMP 31
+				PSHS
+				MULS
+				EQL TOPS
+				ADD 12345
+				CLRS
+				JMP 9
+				PSHS
+				JMP 20
+				PSHS
+				MODS
+				JMP 27
+				PSHS
+				MULS
+				JMP 22
+				EQL TOPS
+				CLRS
+				JMP 9
+				PSHS
+				JMP 20
+				PSHS
+				DIVS
+				EQL TOPS
+				CLRS                    # a step of q and a remainder r goes up to q + 1 with a chance of r / cell 9, so on average nothing is lost
+				JMP 22
+				PSHS
+				JMP 31
+				IF LESS $STACK
 					JMP 20
-					PSHS
-					DIVS
+					ADD
+				ENDIF
+
+				CLRS
+				JMP 20
+				PSHS
+				JMP 24
+				IF
 					JMP 28
 					JMP $CELL
 					ADD $STACK
 				ELSE
-					CLRS
-					JMP 9
-					PSHS
-					JMP 20
-					PSHS
-					DIVS
 					JMP 28
 					JMP $CELL
 					SUB $STACK

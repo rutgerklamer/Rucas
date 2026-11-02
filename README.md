@@ -2,7 +2,7 @@
 
 Rucas is a small esoteric programming language in the spirit of Brainfuck, but with readable assembly-style mnemonics. A program works on a tape of 30,000 byte-sized cells and a stack, and it has loops, `IF` blocks and console I/O.
 
-Written in 2018. In 2026 it learned to multiply, divide and choose, and runs language models written in it by hand, a small neural network among them.
+Written in 2018. In 2026 it learned to multiply, divide and choose, and now runs language models written in Rucas itself, small neural networks among them.
 
 ```
 ADD 72
@@ -235,12 +235,12 @@ To write other names, change the seed on the line `ADD 2018`, or give it a list 
 | 165 | DTANH | Multiplies each of n numbers from a by 1 − b[i]², the slope of tanh |
 | 170 | RAND | Fills n numbers from a with random numbers from b up to b + c |
 | 180 | COPY | Copies n numbers from a to b |
-| 190 | STEP | A learning step; weight i of line j in the matrix at c loses a[j] × b[i] ÷ cell 9 |
+| 190 | STEP | A learning step; weight i of line j in the matrix at c loses a[j] × b[i] ÷ cell 9, rounded by chance |
 | 200 | SOFTMAX | Turns n numbers from a into chances that add up to 1.0 |
 | 205 | DSOFTMAX | Turns n errors from a, on the chances SOFTMAX gave in b, into the errors on its scores |
 | 210 | LOG | Turns each of n numbers from a into its natural log |
 
-Numbers are signed, with 12 bits after the point, so 1.0 is 4096. A list is n numbers starting at a cell, a step apart; the step for a is in cell 6 and the step for b in cell 7, both 1 to start. A matrix is lines of n numbers, with cell 18 saying how many lines and cell 19 how far apart they start, so the same MATVEC reads rows or columns. Arguments go in cells 2 (a), 3 (b), 4 (c) and 5 (n), and a single result comes back in c. STEP divides by cell 9, which starts at 4096; 4096 ÷ rate makes it a learning step of that rate. RAND keeps its state in cell 31, starting at 2018, so every run comes out the same. Cells 48 to 95 are the program's own, and ALLOC hands out cells from 96. A call to FMUL that comes back to piece 2;
+Numbers are signed, with 12 bits after the point, so 1.0 is 4096. A list is n numbers starting at a cell, a step apart; the step for a is in cell 6 and the step for b in cell 7, both 1 to start. A matrix is lines of n numbers, with cell 18 saying how many lines and cell 19 how far apart they start, so the same MATVEC reads rows or columns. Arguments go in cells 2 (a), 3 (b), 4 (c) and 5 (n), and a single result comes back in c. STEP divides by cell 9, which starts at 4096; 4096 ÷ rate makes it a learning step of that rate. It rounds up with a chance of what remains ÷ cell 9, so on average even the steps smaller than 1/4096 count. RAND keeps its state in cell 31, starting at 2018, so every run comes out the same; STEP draws its chances from it too. Cells 48 to 95 are the program's own, and ALLOC hands out cells from 96. A call to FMUL that comes back to piece 2;
 
 ```
 JMP 1
@@ -260,7 +260,7 @@ ADD 100
 
 ### A network that learns names
 
-[names_network.ruc](showcase/names/names_network.ruc) is a small neural network on top of lm_base. It learns from the same names which symbol comes after the 3 before it. Each of the 3 gets 8 learned numbers, its embedding; the 24 of them feed 32 tanh neurons, and those give a score for every symbol, which SOFTMAX turns into chances. That makes 1,907 weights. It learns one example at a time, from random places in the names, for 10 passes of 9,630 examples, and then writes 20 names. It takes under a minute.
+[names_network.ruc](showcase/names/names_network.ruc) is a small neural network on top of lm_base. It learns from the same names which symbol comes after the 3 before it. Each of the 3 gets 8 learned numbers, its embedding; the 24 of them feed 32 tanh neurons, and those give a score for every symbol, which SOFTMAX turns into chances. That makes 1,907 weights. It learns one example at a time, from random places in the names, for 10 passes of 9,630 examples, and then writes 20 names. It takes about a minute and a half.
 
 ```bash
 ./rucas showcase/lm_base/base.ruc showcase/names/names_network.ruc showcase/names/names.txt
@@ -269,48 +269,48 @@ ADD 100
 It prints the average loss of every pass, then the names. The loss says how surprised the network is by the right symbol; the counts in names.ruc come to 2.35.
 
 ```
-2.4938
-2.4106
+2.4802
+2.3818
 ...
-2.1296
-bra
-lebynn
-rulah
-ertey
-ila
-andel
-haelani
-cadeline
+2.0637
+sulun
+melii
+anda
+made
+patrielle
+telyn
+alleylee
+marien
 ```
 
 ### A network with attention
 
-[names_attention.ruc](showcase/names/names_attention.ruc) is that network with one attention head added, so besides the 3 symbols before the next one it also looks back over 8. Each of the 8 gets its embedding plus one for its place. The newest one asks a question, A times its embedding, and each of the 8 gets a score for how well it answers; SOFTMAX turns the scores into chances, and the 8 mixed by those chances go into the tanh neurons together with the 3 newest. That makes 2,291 weights. It learns at 0.02, then at 0.005 for the last 3 passes, and takes about a minute and a half.
+[names_attention.ruc](showcase/names/names_attention.ruc) is that network with one attention head added, so besides the 3 symbols before the next one it also looks back over 8. Each of the 8 gets its embedding plus one for its place. The newest one asks a question, A times its embedding, and each of the 8 gets a score for how well it answers; SOFTMAX turns the scores into chances, and the 8 mixed by those chances go into the tanh neurons together with the 3 newest. That makes 2,291 weights. It learns at 0.02, then at 0.005 for the last 3 passes, and takes about two minutes.
 
 ```bash
 ./rucas showcase/lm_base/base.ruc showcase/names/names_attention.ruc showcase/names/names.txt
 ```
 
-It ends at a loss of 2.06, where names_network.ruc ends at 2.13.
+It ends at a loss of 1.96, where names_network.ruc ends at 2.06.
 
 ```
-2.4580
-2.3000
+2.4394
+2.2653
 ...
-2.0610
-maialey
-mirk
-belia
-aliliah
-lachley
-rari
-abylinn
-julie
+1.9648
+noyan
+lacar
+adalay
+brynn
+fryah
+glina
+caltin
+moriah
 ```
 
 ### A network that reads Shakespeare
 
-[shakespeare.ruc](showcase/shakespeare/shakespeare.ruc) reads the first 100,000 characters of Shakespeare, from the start of Coriolanus, and learns from every symbol as it comes. It reads the text only once, so the text never has to fit on the tape. It knows 36 symbols; a to z, a line break, a space and `, . : ; ' ? ! -`, with capitals read as small letters. Each of the 4 symbols before the next one gets 16 learned numbers, the 64 of them feed 64 tanh neurons, and those give a score for every symbol. That makes 7,076 weights. It learns at 0.02 for the first 75,000 symbols and at 0.005 after, then goes on writing where the text stops. It is built on names_network.ruc rather than names_attention.ruc, since on this much text one attention head gained nothing. It takes about three and a half minutes.
+[shakespeare.ruc](showcase/shakespeare/shakespeare.ruc) reads the first 100,000 characters of Shakespeare, from the start of Coriolanus, and learns from every symbol as it comes. It reads the text only once, so the text never has to fit on the tape. It knows 36 symbols; a to z, a line break, a space and `, . : ; ' ? ! -`, with capitals read as small letters. Each of the 4 symbols before the next one gets 16 learned numbers, the 64 of them feed 64 tanh neurons, and those give a score for every symbol. That makes 7,076 weights. It learns at 0.02 for the first 75,000 symbols and at 0.005 after, then goes on writing where the text stops. It is built on names_network.ruc rather than names_attention.ruc, since on this much text one attention head gained nothing. It takes about five and a half minutes.
 
 ```bash
 ./rucas showcase/lm_base/base.ruc showcase/shakespeare/shakespeare.ruc showcase/shakespeare/shakespeare.txt
@@ -319,20 +319,20 @@ julie
 It prints the average loss of every 10,000 symbols, then 1,000 characters of its own.
 
 ```
-2.5251
-2.3244
+2.5180
+2.3110
 ...
-1.9584
+1.8652
 ...
-sir coar, spelate will, and be sess to foee of then! thim botio gow is bote. your thou have is you to gome.
-
-my that hims
-the blang.
-
-senenius:
-thy the wotr goat
-so bifies and baked
-a mon with him meace my soak yase sonio, way.
+brutus:
+for moyon peotine
+you trom,
+a hod gremy's ripldinius: do rom
+to cominius:
+gforthe stall! thall's goon the for will or fore yut shay thowhom the gatt-be shrocd plis
+no'd but,
+menenius gous,
+that is loth.
 ```
 
 ### Samples
