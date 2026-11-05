@@ -16,6 +16,7 @@ PRNTA
 | [rucas.cpp](rucas.cpp) | The interpreter. A single C++ file with no dependencies. |
 | [samples](samples) | Example programs from 2018. They run unchanged on `rucas.cpp`. |
 | [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. [lm_base](showcase/lm_base) is a base of functions for bigger models; [names_network.ruc](showcase/names/names_network.ruc), [names_attention.ruc](showcase/names/names_attention.ruc) and [shakespeare.ruc](showcase/shakespeare/shakespeare.ruc) are neural networks built on it. |
+| [site](site) | A page that runs Rucas in a browser. |
 | [code_patterns](code_patterns) | Small programs that show the moves Rucas programs are built from, and why they work. |
 | [main.cpp](main.cpp) | The original 2018 interpreter, kept as it was. It is Windows-only and has the bugs that `rucas.cpp` fixes. |
 | [main.ruc](main.ruc) | The original 2018 scratch program. It contains two typos (`JMPRT` and `PRNT`) that the old interpreter silently accepted; `rucas.cpp` points them out. |
@@ -58,6 +59,20 @@ A program can be spread over several files. Give them in order and they run as o
 
 ```bash
 ./rucas showcase/lm_base/base.ruc showcase/lm_base/test.ruc
+```
+
+## In a browser
+
+[site](site) is a small page that runs the same `rucas.cpp`, built to WebAssembly, with every program in this repo as an example. Every time a program prints, it shows the tape around the pointer and the top of the stack. Below full speed, or with Step, a twin of the interpreter in [step.js](site/step.js) runs it one instruction at a time and marks the line that runs next. It reads the examples from the repo, so serve the repo's root and open `/site/`;
+
+```bash
+python -m http.server
+```
+
+After a change to `rucas.cpp`, build `site/rucas.wasm` again;
+
+```bash
+python -m ziglang c++ -target wasm32-wasi -std=c++11 -O2 -fno-exceptions -s -Wl,--export=m_cells -Wl,--export=m_cell -Wl,--export=m_stack -o site/rucas.wasm rucas.cpp
 ```
 
 ## The machine
