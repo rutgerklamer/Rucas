@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rucas</title>
+<link rel="stylesheet" href="style.css">
+<script src="step.js" defer></script>
+<script src="run.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#try">Skip to the interpreter</a>
+<main>
+<h1>Rucas</h1>
+<p><strong>Rucas</strong> is a small esoteric programming language in the spirit of Brainfuck, but with readable assembly-style mnemonics. A program works on a tape of 30,000 cells and a stack, and it has loops, <code>IF</code> blocks and console I/O. It was written in 2018, and in 2026 it learned to multiply, divide and choose, and now runs small neural networks written in Rucas itself.</p>
+<p>This page runs the real interpreter, <a href="https://github.com/rutgerklamer/Rucas/blob/master/rucas.cpp">rucas.cpp</a>, built to WebAssembly. The <a href="https://github.com/rutgerklamer/Rucas">repository</a> has the full description.</p>
+
+<section id="try" aria-labelledby="try-title">
+<h2 id="try-title">Try it</h2>
+
+<p>
+<label for="example">Example</label>
+<select id="example"></select>
+</p>
+<p id="also" hidden></p>
+
+<label for="program">Program</label>
+<div class="editor">
+<div class="current" id="current" hidden></div>
+<pre class="lines" id="lines" aria-hidden="true">1</pre>
+<textarea id="program" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" rows="16"></textarea>
+</div>
+
+<label for="input">Input, read by <code>CINP</code></label>
+<textarea id="input" spellcheck="false" wrap="off" rows="3"></textarea>
+
+<p class="buttons">
+<button type="button" id="run">Run</button>
+<button type="button" id="step">Step</button>
+<button type="button" id="stop" disabled>Stop</button>
+<label class="speed" for="speed">Speed</label>
+<input type="range" id="speed" min="0" max="12" value="12">
+<output id="speed-text" for="speed">Full</output>
+</p>
+<p class="state">
+<span id="status" role="status"></span>
+<span id="timer" aria-hidden="true"></span>
+</p>
+
+<h3 id="output-title">Output</h3>
+<div class="outbox">
+<pre id="output" class="output" tabindex="0" aria-labelledby="output-title"></pre>
+<div id="error" role="alert"></div>
+</div>
+
+<div class="tape-head">
+<h3>Tape</h3>
+<p class="key" aria-hidden="true"><span class="swatch here"></span>pointer <span class="swatch lit"></span>just changed</p>
+</div>
+<div class="tape" id="tape" aria-hidden="true"></div>
+<p id="summary"></p>
+</section>
+
+<section aria-labelledby="ref-title">
+<h2 id="ref-title">Instructions</h2>
+<p>One instruction per line, a <code>#</code> starts a comment. An argument is a number <code>N</code>, <code>$CELL</code> for the current cell, or <code>$STACK</code> for the top of the stack; left out, it is 1. Cells hold 0 to 255 and wrap, unless a <code>BITS 16</code> or <code>BITS 32</code> line comes first.</p>
+<table>
+<caption>The 26 instructions</caption>
+<thead><tr><th scope="col">Instruction</th><th scope="col">What it does</th></tr></thead>
+<tbody>
+<tr><td><code>ADD</code>, <code>SUB</code></td><td>Add to, or subtract from, the current cell</td></tr>
+<tr><td><code>JMPR</code>, <code>JMPL</code></td><td>Move the pointer right or left</td></tr>
+<tr><td><code>JMP</code></td><td>Move the pointer to a cell number</td></tr>
+<tr><td><code>PRNTA</code>, <code>PRNTD</code></td><td>Print cells as characters, or as numbers</td></tr>
+<tr><td><code>CINP</code></td><td>Read one character of input into the current cell, 0 at the end</td></tr>
+<tr><td><code>STLP</code>, <code>NDLP</code></td><td>Loop while the current cell is not 0</td></tr>
+<tr><td><code>IF</code></td><td>Run the block if the argument, by default the current cell, is more than 0</td></tr>
+<tr><td><code>IF EQL</code>, <code>IF LESS</code>, <code>IF MORE</code></td><td>Run the block if the current cell is equal to, less than or more than the argument</td></tr>
+<tr><td><code>ELSE</code>, <code>ENDIF</code></td><td>What runs when the <code>IF</code> does not, and the end of the block</td></tr>
+<tr><td><code>HALT</code></td><td>Stop the program</td></tr>
+<tr><td><code>PSHS</code></td><td>Push the current cell onto the stack</td></tr>
+<tr><td><code>CLRS</code>, <code>RMVS</code></td><td>Clear the stack, or remove its bottom value</td></tr>
+<tr><td><code>EQL TOPS</code></td><td>Set the current cell to the top of the stack</td></tr>
+<tr><td><code>ADDS</code>, <code>SUBS</code>, <code>MULS</code>, <code>DIVS</code>, <code>MODS</code></td><td>Push the top and the value below it added, subtracted, multiplied, divided or as a remainder</td></tr>
+</tbody>
+</table>
+</section>
+</main>
+</body>
+</html>
