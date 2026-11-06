@@ -1,0 +1,164 @@
+# Chances; picking a letter by how often it counts, and rounding a division up or down by chance
+
+BITS 32
+
+JMP 9
+ADD 10
+JMP 10                  # the random state, and the numbers of the generator from numbers.ruc
+ADD 2018
+JMP 11
+ADD 1103515245
+JMP 12
+ADD 12345
+JMP 13
+ADD 65536
+
+JMP 20                  # a counts 1, b counts 2 and c counts 5, so c should come out 5 times in 8
+ADD 1
+JMPR
+ADD 2
+JMPR
+ADD 5
+JMP 24
+ADD 8
+
+JMP 1                   # 24 letters
+ADD 24
+STLP
+	CLRS
+	JMP 11
+	PSHS
+	JMP 10
+	PSHS
+	MULS
+	JMP 12
+	PSHS
+	ADDS
+	JMP 10
+	EQL TOPS
+	CLRS
+	JMP 13
+	PSHS
+	JMP 10
+	PSHS
+	DIVS
+	JMP 2
+	EQL TOPS
+	CLRS
+	JMP 24
+	PSHS
+	JMP 2
+	PSHS
+	MODS
+	EQL TOPS
+
+	JMP 3                   # walk along the counts until r falls inside one; r lands in c 5 times in 8
+	SUB $CELL
+	ADD 20
+	JMP 4
+	SUB $CELL
+	ADD 97
+	JMP 5
+	ADD
+	STLP
+		CLRS
+		JMP 2
+		PSHS
+		JMP 3
+		JMP $CELL
+		IF MORE $STACK
+			JMP 5
+			SUB $CELL
+		ELSE
+			CLRS                    # past this letter, so its count comes off r
+			PSHS
+			JMP 2
+			SUB $STACK
+			JMP 3
+			ADD
+			JMP 4
+			ADD
+		ENDIF
+		JMP 5
+	NDLP
+	JMP 4
+	PRNTA
+	JMP 1
+	SUB
+NDLP
+JMP 9
+PRNTA
+
+JMP 30                  # 7 / 4 a hundred times; rounded down that is 100, but it should be 175
+ADD 7
+JMP 31
+ADD 4
+JMP 38
+SUB                     # 0 - 1 wraps to 4294967295, the most a cell holds
+CLRS
+JMP 31
+PSHS
+JMP 30
+PSHS
+DIVS
+JMP 32
+EQL TOPS
+CLRS
+JMP 31
+PSHS
+JMP 30
+PSHS
+MODS
+JMP 33
+EQL TOPS
+CLRS                    # take q + 1 with a chance of r / 4; a state below r * (4294967295 / 4) comes that often
+JMP 31
+PSHS
+JMP 38
+PSHS
+DIVS
+JMP 34
+EQL TOPS
+CLRS
+JMP 33
+PSHS
+JMP 34
+PSHS
+MULS
+JMP 35
+EQL TOPS
+
+JMP 36
+ADD 100
+STLP
+	CLRS
+	JMP 32
+	PSHS
+	JMP 37
+	ADD $STACK
+	CLRS
+	JMP 11
+	PSHS
+	JMP 10
+	PSHS
+	MULS
+	JMP 12
+	PSHS
+	ADDS
+	JMP 10
+	EQL TOPS
+	CLRS
+	JMP 35
+	PSHS
+	JMP 10
+	IF LESS $STACK
+		JMP 37
+		ADD
+	ENDIF
+	JMP 36
+	SUB
+NDLP
+JMP 37
+PRNTD
+JMP 9
+PRNTA

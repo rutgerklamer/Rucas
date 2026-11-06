@@ -1,0 +1,134 @@
+# Numbers with a point below 0, and printing them with four decimals
+
+BITS 32                 # room for numbers times 4096 and their products
+
+JMP 9
+ADD 10
+JMP 10
+ADD 4096
+JMP 11
+ADD 45                  # the characters -, . and 0, since PRNTA only prints cells
+JMP 12
+ADD 46
+JMP 14
+ADD 48
+JMP 13
+ADD 10000
+
+JMP 1                   # -1.5 * 0.75; below 0 a number wraps, so -1.5 is 4294967296 - 6144
+SUB 6144
+JMP 2
+ADD 3072
+CLRS
+JMP 1
+PSHS
+JMP 2
+PSHS
+MULS
+JMP 40
+EQL TOPS                # wrapped to 32 bits the product is still right, but DIVS knows no minus
+IF MORE 2147483647      # so divide the size, and put the minus back after
+	CLRS
+	PSHS
+	SUB $CELL
+	SUB $STACK
+	CLRS
+	JMP 10
+	PSHS
+	JMP 40
+	PSHS
+	DIVS
+	EQL TOPS
+	CLRS
+	PSHS
+	SUB $CELL
+	SUB $STACK
+ELSE
+	CLRS
+	JMP 10
+	PSHS
+	JMP 40
+	PSHS
+	DIVS
+	EQL TOPS
+ENDIF
+JMP 41
+ADD 256                 # 0.0625, whose zero after the point PRNTD would drop
+
+JMP 6
+ADD 40
+JMP 5
+ADD 2
+STLP
+	CLRS
+	JMP 6
+	JMP $CELL
+	PSHS
+	JMP 3
+	SUB $CELL
+	ADD $STACK              # a copy, so printing leaves the number as it was
+	IF MORE 2147483647      # PRNTD knows no minus either, so print one and go on with the size
+		JMP 11
+		PRNTA
+		JMP 3
+		CLRS
+		PSHS
+		SUB $CELL
+		SUB $STACK
+	ENDIF
+	CLRS
+	JMP 10
+	PSHS
+	JMP 3
+	PSHS
+	DIVS
+	JMP 4
+	EQL TOPS
+	PRNTD
+	JMP 12
+	PRNTA
+	CLRS                    # what is left is in 4096ths, and four decimals are ten-thousandths
+	JMP 10
+	PSHS
+	JMP 3
+	PSHS
+	MODS
+	JMP 4
+	EQL TOPS
+	CLRS
+	JMP 13
+	PSHS
+	JMP 4
+	PSHS
+	MULS
+	EQL TOPS
+	CLRS
+	JMP 10
+	PSHS
+	JMP 4
+	PSHS
+	DIVS
+	EQL TOPS
+	IF LESS 1000            # PRNTD drops leading zeros, so 0.0625 needs its zero put back
+		JMP 14
+		PRNTA
+	ENDIF
+	JMP 4
+	IF LESS 100
+		JMP 14
+		PRNTA
+	ENDIF
+	JMP 4
+	IF LESS 10
+		JMP 14
+		PRNTA
+	ENDIF
+	JMP 4
+	PRNTD
+	JMP 9
+	PRNTA
+	JMP 6
+	ADD
+	JMP 5
+	SUB
+NDLP

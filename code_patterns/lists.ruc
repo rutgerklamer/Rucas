@@ -1,0 +1,108 @@
+# Lists and matrices; a list is numbers a step apart, so one loop reads a matrix by rows and by columns
+
+JMP 9
+ADD 10
+JMP 11
+ADD 32
+
+JMP 40                  # a matrix of 2 lines of 3, the line 1 2 3 and then the line 4 5 6
+ADD 1
+JMPR
+ADD 2
+JMPR
+ADD 3
+JMPR
+ADD 4
+JMPR
+ADD 5
+JMPR
+ADD 6
+
+JMP 1                   # as rows; 3 numbers a step of 1 apart, 2 lines that start 3 apart
+ADD 3
+JMP 2
+ADD 2
+JMP 3
+ADD 1
+JMP 4
+ADD 3
+JMP 12
+ADD 2                   # two rounds, rows and then columns
+STLP
+	JMP 5
+	SUB $CELL
+	ADD 40
+	CLRS
+	JMP 2
+	PSHS
+	JMP 10
+	EQL TOPS
+	STLP
+		CLRS
+		JMP 5
+		PSHS
+		JMP 6
+		EQL TOPS
+		CLRS
+		JMP 1
+		PSHS
+		JMP 7
+		EQL TOPS
+		JMP 8
+		SUB $CELL
+		JMP 7
+		STLP
+			CLRS
+			JMP 6
+			JMP $CELL
+			PSHS
+			JMP 8
+			ADD $STACK
+			CLRS
+			JMP 3
+			PSHS
+			JMP 6
+			ADD $STACK
+			JMP 7
+			SUB
+		NDLP
+		JMP 8
+		PRNTD
+		JMP 11
+		PRNTA
+		CLRS
+		JMP 4
+		PSHS
+		JMP 5
+		ADD $STACK
+		JMP 10
+		SUB
+	NDLP
+	JMP 9
+	PRNTA
+
+	CLRS                    # as columns; swap the two counts and the two steps, and the same loop sums down a column
+	JMP 2
+	PSHS
+	JMP 1
+	PSHS
+	JMP 2
+	EQL TOPS
+	ADDS
+	SUBS
+	JMP 1
+	EQL TOPS
+	CLRS
+	JMP 4
+	PSHS
+	JMP 3
+	PSHS
+	JMP 4
+	EQL TOPS
+	ADDS
+	SUBS
+	JMP 3
+	EQL TOPS
+	JMP 12
+	SUB
+NDLP

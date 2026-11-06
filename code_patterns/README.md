@@ -11,7 +11,10 @@ The moves that Rucas programs are built from, each in a small program that runs 
 | [cells.ruc](cells.ruc) | Copying, adding, doubling, negating, emptying and swapping cells | 7, 14, 28, 228, 0, 3 and 7 |
 | [pointers.ruc](pointers.ruc) | Following pointers, and moving by a number known only while running | two and w |
 | [numbers.ruc](numbers.ruc) | The order on the stack, numbers below 0, numbers with a point, random numbers, comparing numbers below 0 | 3, -5, 4608, 54, 61, 49, 0 and 1 |
+| [points.ruc](points.ruc) | Multiplying numbers with a point below 0, printing them with four decimals | -1.1250 and 0.0625 |
 | [loops.ruc](loops.ruc) | Counting loops, walking until a 0, leaving a loop from inside, the largest in a list | `***`, hi, 2 and 77 |
+| [lists.ruc](lists.ruc) | One loop that sums a matrix by rows and by columns | 6 15 and 5 7 9 |
+| [chances.ruc](chances.ruc) | Picking a letter by its count, rounding a division by chance | 24 letters, 19 of them c, and 173 |
 | [functions.ruc](functions.ruc) | A function called from two places, and from a loop | 9, 25, 4, 9 and 16 |
 | [recursion.ruc](recursion.ruc) | A function that calls itself | 120 |
 
@@ -78,6 +81,12 @@ A cell can hold the number of another cell, and `JMP $CELL` goes there.
 
 **Comparing numbers below 0.** `IF LESS` and `IF MORE` see the size of a cell, so −5, stored as 4294967291, comes out above 3. Adding 2147483648 to both first flips their top bit, which moves every number below 0 under every number above it, and the comparison comes out right. Every number keeps its order, so this works for any two.
 
+## Points
+
+**Multiply below 0.** `MULS` wraps around, and wrapped to 32 bits a product of two numbers below 0, or of one below and one above, is still right. Only the division by 4096 goes wrong, since `DIVS` sees the size of the cell, so −1.5 × 0.75, stored as 4294967296 − 18874368, would come out as 254.875 and not −1.125. Make the product positive, divide it, and put the minus back.
+
+**Print with four decimals.** Print a minus and go on with the size, then the whole part, the product ÷ 4096, and a point. What is left after the point is in 4096ths, so times 10000 ÷ 4096 turns it into ten-thousandths. `PRNTD` drops leading zeros, so 256, which is 0.0625, would print as 0.625; a 0 goes in front for every place the number is short of 1000.
+
 ## Loops
 
 **A set number of times.** `STLP` and `NDLP` both stand on a counter that counts down to 0.
@@ -87,6 +96,18 @@ A cell can hold the number of another cell, and `JMP $CELL` goes there.
 **Leave a loop from inside.** End one branch on a cell that holds 0 and the other on a cell that does not, and `NDLP` stops or goes round to match. Such a loop starts on any cell that is not 0, so `STLP` lets it in.
 
 **The largest in a list.** Keep the largest so far in a cell, push it, step onto the next number and test it with `IF MORE $STACK`; when the number is larger, it takes the place of the largest. A pointer in a cell walks the list, since the loop also jumps back to the cell holding the largest.
+
+## Lists
+
+**A list is numbers a step apart.** Keep where it starts, how many there are and the step in cells, and walk it with a pointer in a cell, `JMP $CELL`, and the step added each round.
+
+**A matrix is lines of a list.** A cell more says how many lines there are, and another how far apart they start. Stored line after line, a matrix of 2 lines of 3 is read as rows with a step of 1 and lines 3 apart. Swap the two counts and the two steps, a step of 3 and lines 1 apart, and the same loop reads it as columns. lists.ruc sums both ways; a network runs forward on rows and learns on columns with one loop.
+
+## Chances
+
+**Pick by count.** Draw a number r below the total of the counts, then walk along them. While r is not inside the count it stands on, the count comes off r and the walk steps on. A letter with a count of 5 out of 8 holds 5 of the 8 values r can have, so it comes out 5 times in 8.
+
+**Round by chance.** `DIVS` rounds down, so 7 ÷ 4 a hundred times adds up to 100 and not 175. With q the result and r what is left, take q + 1 with a chance of r ÷ 4. A random state below r × (4294967295 ÷ 4) comes r ÷ 4 of the time, so compare the next state with that once, and the sum comes out 175 on average. Small steps that `DIVS` would lose every time then count on average.
 
 ## Functions
 
