@@ -287,8 +287,23 @@ label.speed {
 	font-size: 0.8rem;
 }
 
+.stack {
+	margin-top: 4px;
+}
+
+.cell.spacer {
+	visibility: hidden;
+}
+
+.cell.empty {
+	flex-grow: 100;
+	color: var(--muted);
+	border-style: dashed;
+}
+
+/* one width for both strips, so their columns line up */
 .cell.names {
-	flex: 0 0 auto;
+	flex: 0 0 4.2rem;
 	padding-right: 0.4rem;
 	text-align: right;
 	border-color: transparent;

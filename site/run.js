@@ -3,11 +3,8 @@
 const EXAMPLES = [
 	["Samples", [
 		["hello_world", ["samples/hello_world.ruc"]],
-		["truth_machine", ["samples/truth_machine.ruc"], "1"],
-		["if_statement", ["samples/if_statement.ruc"]],
-		["Fibonacci_sequence", ["samples/Fibonacci_sequence.ruc"]],
 	]],
-	["Code patterns", ["cells", "pointers", "numbers", "loops", "functions", "recursion"]
+	["Code patterns", ["cells", "pointers", "numbers", "points", "loops", "lists", "chances", "functions", "recursion"]
 		.map(name => [name, [`code_patterns/${name}.ruc`]])],
 	["Showcase", [
 		["names", ["showcase/names/names.ruc"], "showcase/names/names.txt"],
@@ -18,7 +15,7 @@ const EXAMPLES = [
 		["shakespeare", ["showcase/lm_base/base.ruc", "showcase/shakespeare/shakespeare.ruc"], "showcase/shakespeare/shakespeare.txt"],
 	]],
 ];
-// endless output, like the truth machine's, keeps only its newest part
+// a program that never ends never stops printing, so only the newest part stays
 const KEEP = 100000;
 const CELL_WIDTH = 56;
 // instructions a second; the last runs rucas.wasm when a run starts there
@@ -48,6 +45,7 @@ let before = [];
 let name = "program.ruc";
 let shown = new Map();
 let lastTape = null;
+let shownStack = new Map();
 
 for (const [group, items] of EXAMPLES) {
 	const optgroup = document.createElement("optgroup");
@@ -86,37 +84,61 @@ async function load() {
 
 const printable = value => value >= 32 && value < 127 ? String.fromCharCode(value) : "";
 
-// as many cells as fit, around the pointer, and a cell that changed since the last look lights up
+function makeCell(rows, className, title) {
+	const cell = document.createElement("div");
+	cell.className = className;
+	cell.title = title || "";
+	for (const [tag, text] of [["small", rows[0]], ["b", rows[1]], ["i", rows[2] || "\u00a0"]]) {
+		const row = document.createElement(tag);
+		row.textContent = text;
+		cell.append(row);
+	}
+	return cell;
+}
+
 function showTape(tape) {
 	lastTape = tape;
 	const box = $("tape");
-	// the first column names the three rows, so the strip explains itself without a line of text
 	const count = Math.max(4, Math.floor(box.clientWidth / CELL_WIDTH) - 1);
 	const first = Math.max(tape.start, Math.min(tape.pointer - Math.floor(count / 2), tape.start + tape.values.length - count));
 	const value = tape.values[tape.pointer - tape.start];
 	const letter = printable(value);
+	const [top, ...below] = tape.stack.slice(0, 4);
 	const stack = tape.depth
-		? `the stack is ${tape.depth} deep, ${tape.stack.join(", ")}${tape.depth > tape.stack.length ? ", …" : ""} on top`
+		? `the stack is ${tape.depth} deep, ${top} on top${below.length ? `, then ${below.join(", ")}` : ""}${tape.depth > 4 ? ` and ${tape.depth - 4} more` : ""}`
 		: "the stack is empty";
 	$("summary").textContent = `${tape.note}; the pointer is at cell ${tape.pointer}, holding ${value}${letter ? ` (${letter})` : ""}, and ${stack}.`;
 	$("summary").title = $("summary").textContent;
-	const names = document.createElement("div");
-	names.className = "cell names";
-	names.innerHTML = "<small>cell</small><b>value</b><i>char</i>";
-	const cells = [names];
+	// the first column names the three rows, so the strip explains itself without a line of text
+	const cells = [makeCell(["cell", "value", "char"], "cell names")];
 	for (let k = first; k < first + count; k++) {
 		const v = tape.values[k - tape.start];
-		const cell = document.createElement("div");
-		cell.className = "cell" + (k === tape.pointer ? " here" : "") + (shown.has(k) && shown.get(k) !== v ? " changed" : "");
-		cell.title = `cell ${k}; ${v}`;
-		cell.innerHTML = "<small></small><b></b><i></i>";
-		cell.children[0].textContent = k;
-		cell.children[1].textContent = v;
-		cell.children[2].textContent = printable(v) || " ";
-		cells.push(cell);
+		const lit = shown.has(k) && shown.get(k) !== v;
+		cells.push(makeCell([k, v, printable(v)], "cell" + (k === tape.pointer ? " here" : "") + (lit ? " changed" : ""), `cell ${k}; ${v}`));
 	}
 	box.replaceChildren(...cells);
 	shown = new Map(tape.values.map((v, k) => [tape.start + k, v]));
+	showStack(tape, count);
+}
+
+// a value lights up by its height from the bottom, since counted from the top one push would light them all
+function showStack(tape, count) {
+	const cells = [makeCell(["from top", "value", "char"], "cell names")];
+	const fits = tape.depth > count ? count - 1 : tape.depth;
+	for (let i = 0; i < fits; i++) {
+		const v = tape.stack[i], height = tape.depth - 1 - i;
+		const lit = shownStack.has(height) && shownStack.get(height) !== v;
+		cells.push(makeCell([i + 1, v, printable(v)], "cell" + (lit ? " changed" : ""), `${i + 1} from the top; ${v}`));
+	}
+	if (tape.depth > fits)
+		cells.push(makeCell([`+${tape.depth - fits}`, "…", ""], "cell", `${tape.depth - fits} more below`));
+	if (!tape.depth)
+		cells.push(makeCell(["", "empty", ""], "cell empty"));
+	// spacers keep a stack cell as wide as a tape cell, so the two strips line up
+	while (tape.depth && cells.length < count + 1)
+		cells.push(makeCell(["", "", ""], "cell spacer"));
+	$("stack").replaceChildren(...cells);
+	shownStack = new Map(tape.stack.slice(0, fits).map((v, i) => [tape.depth - 1 - i, v]));
 }
 
 function show(text) {
@@ -181,6 +203,7 @@ function clear() {
 	status.textContent = "";
 	$("timer").textContent = "";
 	shown = new Map();
+	shownStack = new Map();
 	showTape(EMPTY);
 }
 
@@ -188,7 +211,7 @@ function files() {
 	return [...before, { name, text: program.value }];
 }
 
-// the line that runs next gets a bar behind it, if it is in the editor and not in base.ruc
+// base.ruc is not in the editor, so its lines get no bar
 function placeCurrent() {
 	const bar = $("current");
 	const ins = machine && !machine.done ? machine.program[machine.at] : null;
@@ -224,18 +247,19 @@ function machineTape() {
 		pointer: machine.cell,
 		values: Array.from(machine.tape.subarray(start, start + 64)),
 		depth: machine.hi - machine.lo,
-		stack: machine.tops(4),
+		stack: machine.tops(32),
 	};
 }
 
 function draw() {
 	followCurrent();
 	placeCurrent();
-	showTape({ note: steps ? `After ${steps.toLocaleString("en")} steps` : "Before the run", ...machineTape() });
-	$("timer").textContent = `${steps.toLocaleString("en")} step${steps === 1 ? "" : "s"}${auto && SPEEDS[speed.value] > 25 ? `, ${rate()} a second` : ""}`;
+	const counted = `${steps.toLocaleString("en")} step${steps === 1 ? "" : "s"}`;
+	showTape({ note: steps ? `After ${counted}` : "Before the run", ...machineTape() });
+	$("timer").textContent = `${counted}${auto && SPEEDS[speed.value] > 25 ? `, ${rate()} a second` : ""}`;
 }
 
-// the speed it really reaches, which at the top of the slider is as fast as this browser goes
+// at the top of the slider the browser sets the pace, so the page says what it really reaches
 function rate() {
 	const seconds = (performance.now() - pace.time) / 1000;
 	const n = seconds > 0 ? (steps - pace.steps) / seconds : 0;
@@ -274,17 +298,20 @@ function startMachine() {
 	return true;
 }
 
-// runs up to count instructions in pieces, or until the time is up
+function runPieces(count, until) {
+	while (count > 0 && !machine.done) {
+		const ran = machine.run(Math.min(count, PIECE));
+		steps += ran;
+		count -= ran;
+		if (until && performance.now() > until)
+			return;
+	}
+}
+
 function advance(count, until) {
 	let failed = null;
 	try {
-		while (count > 0 && !machine.done) {
-			const ran = machine.run(Math.min(count, PIECE));
-			steps += ran;
-			count -= ran;
-			if (until && performance.now() > until)
-				break;
-		}
+		runPieces(count, until);
 	}
 	catch (e) {
 		if (!(e instanceof RucasError))
@@ -314,8 +341,12 @@ function tick() {
 	// as many steps as the time since the last tick is worth, so a slow or hidden page keeps its speed
 	else {
 		const now = performance.now();
-		advance(s === Infinity ? Infinity : Math.max(1, Math.round(s * (now - last) / 1000)), now + FRAME);
-		last = now;
+		const due = s === Infinity ? Infinity : Math.floor(s * (now - last) / 1000);
+		const from = steps;
+		if (due > 0)
+			advance(due, now + FRAME);
+		// a part of a step carries over to the next tick, a backlog the browser could not run does not
+		last = steps - from < due ? now : last + due * 1000 / s;
 		if (machine && auto)
 			timer = setTimeout(tick, 4);
 	}
@@ -358,13 +389,10 @@ async function runFull() {
 	clear();
 	const compiled = await module;
 	status.textContent = "Running";
-	const out = new TextDecoder(), err = new TextDecoder();
-	let errors = "";
 	const started = performance.now();
-	worker = new Worker("worker.js");
-	setState();
 	const ticking = setInterval(() => { $("timer").textContent = `${Math.round((performance.now() - started) / 1000)} s`; }, 1000);
-	const finish = text => {
+	worker = new Worker("worker.js");
+	worker.stop = (text = "Stopped") => {
 		clearInterval(ticking);
 		worker.terminate();
 		worker = null;
@@ -372,7 +400,20 @@ async function runFull() {
 		$("timer").textContent = "";
 		setState();
 	};
-	worker.onmessage = ({ data }) => {
+	worker.onmessage = listen(started);
+	worker.onerror = e => {
+		worker.stop("The interpreter crashed");
+		showError(e.message);
+	};
+	setState();
+	worker.postMessage({ module: compiled, files: files(), input: input.value });
+}
+
+// one decoder per stream, so a character split across two posts still comes out whole
+function listen(started) {
+	const out = new TextDecoder(), err = new TextDecoder();
+	let errors = "";
+	return ({ data }) => {
 		if (data.tape)
 			showTape({ note: "At the last output", ...data.tape });
 		else if (data.fd === 1)
@@ -380,17 +421,11 @@ async function runFull() {
 		else if (data.fd === 2)
 			errors += data.chunks.map(c => err.decode(c, { stream: true })).join("");
 		else {
-			finish(data.done === 0 ? `Finished in ${((performance.now() - started) / 1000).toFixed(1)} s` : "Stopped with an error");
+			worker.stop(data.done === 0 ? `Finished in ${((performance.now() - started) / 1000).toFixed(1)} s` : "Stopped with an error");
 			if (errors)
 				showError(errors);
 		}
 	};
-	worker.onerror = e => {
-		finish("The interpreter crashed");
-		showError(e.message);
-	};
-	worker.stop = () => finish("Stopped");
-	worker.postMessage({ module: compiled, files: files(), input: input.value });
 }
 
 function stop() {

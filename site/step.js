@@ -54,63 +54,11 @@ class Machine {
 	// the same checks and messages as rucas.cpp, so both say the same about a broken program
 	parse(files) {
 		const open = [];
-		let started = false;
 		files.forEach((f, file) => {
 			const lines = f.text.split("\n");
 			if (lines[lines.length - 1] === "")
 				lines.pop();
-			lines.forEach((text, k) => {
-				const line = k + 1;
-				const words = text.split("#")[0].split(/[ \t\r\v\f]+/).filter(Boolean);
-				if (!words.length)
-					return;
-				let op = words.shift();
-				if ((op === "IF" && ["EQL", "LESS", "MORE"].includes(words[0])) || (op === "EQL" && words[0] === "TOPS"))
-					op += " " + words.shift();
-				const arg = words.shift() || "";
-				if (words.length)
-					this.fail(file, line, `unexpected '${words[0]}'`);
-				if (op === "BITS") {
-					if (started)
-						this.fail(file, line, "BITS must come before the first instruction");
-					const value = parseArg(arg);
-					if (!value || value.arg !== "n" || ![8, 16, 32].includes(value.n))
-						this.fail(file, line, "BITS takes 8, 16 or 32");
-					this.mask = value.n === 32 ? 0xFFFFFFFF : (1 << value.n) - 1;
-					return;
-				}
-				if (!OPS.includes(op))
-					this.fail(file, line, `unknown instruction '${op}'`);
-				const value = parseArg(arg);
-				if (!value)
-					this.fail(file, line, `'${arg}' is not a valid argument (expected N, $CELL or $STACK)`);
-				started = true;
-				const ins = { op, text: arg, ...value, file, line, match: -1 };
-				if (["JMP", "IF EQL", "IF LESS", "IF MORE"].includes(op) && ins.arg === "none")
-					this.fail(file, line, op + (op === "JMP" ? " needs a cell number" : " needs a value to compare with"));
-				const index = this.program.length;
-				const top = open[open.length - 1];
-				const inIf = open.length > 0 && this.program[top].op !== "STLP";
-				// a false IF jumps to its ELSE, and the ELSE jumps to ENDIF
-				if (OPENERS.includes(op))
-					open.push(index);
-				else if (op === "ELSE") {
-					if (!inIf || this.program[top].op === "ELSE")
-						this.fail(file, line, "ELSE without matching IF");
-					this.program[top].match = index;
-					ins.match = top;
-					open[open.length - 1] = index;
-				}
-				else if (op === "NDLP" || op === "ENDIF") {
-					const loop = op === "NDLP";
-					if (!open.length || inIf === loop)
-						this.fail(file, line, `${op} without matching ${loop ? "STLP" : "IF"}`);
-					this.program[top].match = index;
-					ins.match = top;
-					open.pop();
-				}
-				this.program.push(ins);
-			});
+			lines.forEach((text, k) => this.parseLine(text, file, k + 1, open));
 		});
 		if (open.length) {
 			const ins = this.program[open[open.length - 1]];
@@ -118,7 +66,65 @@ class Machine {
 		}
 	}
 
-	// runs up to count instructions and gives back how many ran; what they print waits in out
+	parseLine(text, file, line, open) {
+		const words = text.split("#")[0].split(/[ \t\r\v\f]+/).filter(Boolean);
+		if (!words.length)
+			return;
+		let op = words.shift();
+		if ((op === "IF" && ["EQL", "LESS", "MORE"].includes(words[0])) || (op === "EQL" && words[0] === "TOPS"))
+			op += " " + words.shift();
+		const arg = words.shift() || "";
+		if (words.length)
+			this.fail(file, line, `unexpected '${words[0]}'`);
+		if (op === "BITS")
+			return this.setBits(arg, file, line);
+		if (!OPS.includes(op))
+			this.fail(file, line, `unknown instruction '${op}'`);
+		const value = parseArg(arg);
+		if (!value)
+			this.fail(file, line, `'${arg}' is not a valid argument (expected N, $CELL or $STACK)`);
+		const ins = { op, text: arg, ...value, file, line, match: -1 };
+		if (["JMP", "IF EQL", "IF LESS", "IF MORE"].includes(op) && ins.arg === "none")
+			this.fail(file, line, op + (op === "JMP" ? " needs a cell number" : " needs a value to compare with"));
+		this.match(ins, open);
+		this.program.push(ins);
+	}
+
+	setBits(arg, file, line) {
+		if (this.program.length)
+			this.fail(file, line, "BITS must come before the first instruction");
+		const value = parseArg(arg);
+		if (!value || value.arg !== "n" || ![8, 16, 32].includes(value.n))
+			this.fail(file, line, "BITS takes 8, 16 or 32");
+		this.mask = value.n === 32 ? 0xFFFFFFFF : (1 << value.n) - 1;
+	}
+
+	// a false IF jumps to its ELSE, and the ELSE jumps to ENDIF
+	match(ins, open) {
+		const index = this.program.length;
+		const top = open[open.length - 1];
+		const inIf = open.length > 0 && this.program[top].op !== "STLP";
+		if (OPENERS.includes(ins.op))
+			return open.push(index);
+		if (ins.op === "ELSE") {
+			if (!inIf || this.program[top].op === "ELSE")
+				this.fail(ins.file, ins.line, "ELSE without matching IF");
+			this.program[top].match = index;
+			ins.match = top;
+			open[open.length - 1] = index;
+			return;
+		}
+		if (ins.op !== "NDLP" && ins.op !== "ENDIF")
+			return;
+		const loop = ins.op === "NDLP";
+		if (!open.length || inIf === loop)
+			this.fail(ins.file, ins.line, `${ins.op} without matching ${loop ? "STLP" : "IF"}`);
+		this.program[top].match = index;
+		ins.match = top;
+		open.pop();
+	}
+
+	// one long loop on purpose, with no call per instruction, since every run below Full goes through it
 	run(count) {
 		const ops = this.ops, kinds = this.kinds, ns = this.ns, matches = this.matches;
 		const t = this.tape, m = this.mask, end = this.program.length, out = this.out;
@@ -173,22 +179,9 @@ class Machine {
 				case 19:
 				case 20:
 				case 21:
-				case 22: {
-					const top = hi > lo ? st[hi - 1] : 0, second = hi - lo > 1 ? st[hi - 2] : 0;
-					const op = ops[at];
-					if (op === 18)
-						push = ((top + second) & m) >>> 0;
-					else if (op === 19)
-						push = ((top - second) & m) >>> 0;
-					else if (op === 20)
-						push = (Math.imul(top, second) & m) >>> 0;
-					else {
-						if (second === 0)
-							this.fail(this.program[at].file, this.program[at].line, `${OPS[op]} by 0: the second value on the stack is 0`);
-						push = op === 21 ? Math.floor(top / second) : top % second;
-					}
+				case 22:
+					push = this.combined(at, hi > lo ? st[hi - 1] : 0, hi - lo > 1 ? st[hi - 2] : 0);
 					break;
-				}
 				case 23: at = matches[at]; break;
 				case 24: if (!(t[cell] < v)) at = matches[at]; break;
 				case 25: if (!(t[cell] > v)) at = matches[at]; break;
@@ -216,12 +209,24 @@ class Machine {
 		return k;
 	}
 
-	// the n values on top of the stack, the top first
+	combined(at, top, second) {
+		const op = this.ops[at], m = this.mask;
+		if (op === 18)
+			return ((top + second) & m) >>> 0;
+		if (op === 19)
+			return ((top - second) & m) >>> 0;
+		if (op === 20)
+			return (Math.imul(top, second) & m) >>> 0;
+		if (second === 0)
+			this.fail(this.program[at].file, this.program[at].line, `${OPS[op]} by 0: the second value on the stack is 0`);
+		return op === 21 ? Math.floor(top / second) : top % second;
+	}
+
+	// the top first, the way the page shows them
 	tops(n) {
 		return Array.from(this.stack.subarray(Math.max(this.lo, this.hi - n), this.hi)).reverse();
 	}
 
-	// the bytes printed since the last time, or null
 	take() {
 		if (!this.out.length)
 			return null;

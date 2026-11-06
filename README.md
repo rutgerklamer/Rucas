@@ -63,7 +63,7 @@ A program can be spread over several files. Give them in order and they run as o
 
 ## In a browser
 
-[site](site) is a small page that runs the same `rucas.cpp`, built to WebAssembly, with every program in this repo as an example. Every time a program prints, it shows the tape around the pointer and the top of the stack. Below full speed, or with Step, a twin of the interpreter in [step.js](site/step.js) runs it one instruction at a time and marks the line that runs next. It reads the examples from the repo, so serve the repo's root and open `/site/`;
+[site](site) is a small page that runs the same `rucas.cpp`, built to WebAssembly, with hello_world, the code patterns and the showcase as examples. Every time a program prints, it shows the tape around the pointer and, under it, the stack with its top first. Below full speed, or with Step, a twin of the interpreter in [step.js](site/step.js) runs it one instruction at a time and marks the line that runs next. It reads the examples from the repo, so serve the repo's root and open `/site/`;
 
 ```bash
 python -m http.server

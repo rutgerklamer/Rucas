@@ -32,7 +32,7 @@ function snapshot() {
 	const stackFrom = v.getUint32(where.stack, true), stackTo = v.getUint32(where.stack + 4, true);
 	const start = Math.max(0, Math.min(pointer - WINDOW / 2, TAPE_SIZE - WINDOW));
 	const stack = [];
-	for (let at = stackTo - 4; at >= stackFrom && stack.length < 4; at -= 4)
+	for (let at = stackTo - 4; at >= stackFrom && stack.length < 32; at -= 4)
 		stack.push(v.getUint32(at, true));
 	tape = {
 		start,
