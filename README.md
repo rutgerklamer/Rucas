@@ -15,7 +15,7 @@ PRNTA
 | ---- | ---------- |
 | [rucas.cpp](rucas.cpp) | The interpreter. A single C++ file with no dependencies. |
 | [samples](samples) | Example programs from 2018. They run unchanged on `rucas.cpp`. |
-| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. [lm_base](showcase/lm_base) is a base of functions for bigger models; [names_network.ruc](showcase/names/names_network.ruc), [names_attention.ruc](showcase/names/names_attention.ruc) and [shakespeare.ruc](showcase/shakespeare/shakespeare.ruc) are neural networks built on it. |
+| [showcase](showcase) | [names.ruc](showcase/names/names.ruc), a language model in Rucas, the names it learns from, and [names_optimised.ruc](showcase/names/names_optimised.ruc), the same model in fewer instructions. [lm_base](showcase/lm_base) is a base of functions for bigger models; [names_network.ruc](showcase/names/names_network.ruc), [names_attention.ruc](showcase/names/names_attention.ruc), [shakespeare.ruc](showcase/shakespeare/shakespeare.ruc) and [shakespeare_recurrent.ruc](showcase/shakespeare/shakespeare_recurrent.ruc) are neural networks built on it. |
 | [site](site) | A page that runs Rucas in a browser. |
 | [code_patterns](code_patterns) | Small programs that show the moves Rucas programs are built from, and why they work. |
 | [main.cpp](main.cpp) | The original 2018 interpreter, kept as it was. It is Windows-only and has the bugs that `rucas.cpp` fixes. |
@@ -348,6 +348,29 @@ gforthe stall! thall's goon the for will or fore yut shay thowhom the gatt-be sh
 no'd but,
 menenius gous,
 that is loth.
+```
+
+### A network that remembers
+
+[shakespeare_recurrent.ruc](showcase/shakespeare/shakespeare_recurrent.ruc) reads the same 100,000 characters, but it sees only the symbol before the next one and a memory of 96 numbers. The symbol gets 16 learned numbers; those, the memory and a 1.0 feed 96 tanh neurons, and what the neurons give is the memory for the next symbol. The score for every symbol comes from that memory. That makes 14,916 weights. It learns after every 16 symbols, from all 16 and newest first, so an error travels back through the memory to the symbols that caused it. It learns at 0.01 for the first 75,000 symbols and at 0.0025 after. It takes about eight and a half minutes.
+
+```bash
+./rucas showcase/lm_base/base.ruc showcase/shakespeare/shakespeare_recurrent.ruc showcase/shakespeare/shakespeare.txt
+```
+
+It ends at a loss of 1.79, where shakespeare.ruc ends at 1.87.
+
+```
+2.4514
+2.2382
+...
+1.7854
+...
+secinius:
+if now both ax all recoods the fort hod voi's with morther thans-
+
+brouge:
+with it sack!
 ```
 
 ### Samples

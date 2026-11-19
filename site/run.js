@@ -37,6 +37,11 @@ const EXAMPLES = [
         ['showcase/lm_base/base.ruc', 'showcase/shakespeare/shakespeare.ruc'],
         'showcase/shakespeare/shakespeare.txt',
       ],
+      [
+        'shakespeare_recurrent',
+        ['showcase/lm_base/base.ruc', 'showcase/shakespeare/shakespeare_recurrent.ruc'],
+        'showcase/shakespeare/shakespeare.txt',
+      ],
     ],
   ],
 ];
